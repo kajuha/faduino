@@ -1,0 +1,13 @@
+1. faduino protocol
+  가. controller tx(controller->faduino)
+    1) output
+      가) 핀 출력명령
+        (1) 전체핀
+        (2) 개별핀
+      나) ACK(tx 명령에 대한 응답)
+      다) DONE(tx 명령을 수행한 후 완료응답)
+  나. controller rx(faduino->controller)
+    1) input
+      가) 핀 입력상태
+        (1) 클릭, 더블클릭, 롱푸시
+      나) ACK(rx 명령에 대한 응답)
