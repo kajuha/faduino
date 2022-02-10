@@ -10,34 +10,57 @@
 #define PIN_INPUT_SW_GREEN 33   // wire(gray)
 #define PIN_INPUT_SW_RED 34   // wire(brown)
 
-PinButton btnEstopL(PIN_INPUT_ESTOP_L);
-PinButton btnEstopR(PIN_INPUT_ESTOP_R);
-PinButton btnSwGreen(PIN_INPUT_SW_GREEN);
-PinButton btnSwRed(PIN_INPUT_SW_RED);
+enum ConditionSwitch {
+  RELEASED, PUSHED, DOUBLE, LONG
+};
+
+typedef struct _StateSwitch {
+  int ESTOP_L;
+  int ESTOP_R;
+  int SW_GREEN;
+  int SW_RED;
+} StateSwitch;
+
+StateSwitch stateSwitch;
+
+PinButton btnSwGreen(PIN_INPUT_SW_GREEN, INPUT);
+PinButton btnSwRed(PIN_INPUT_SW_RED, INPUT);
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
+  pinMode(PIN_INPUT_ESTOP_L, INPUT);
+  pinMode(PIN_INPUT_ESTOP_R, INPUT);
 }
 
 void loop() {
-  btnEstopL.update();
-  btnEstopR.update();
   btnSwGreen.update();
   btnSwRed.update();
-
-  if (btnSwGreen.isClick()) {
-    Serial.println("click");
-  }
-  if (btnSwGreen.isSingleClick()) {
-    Serial.println("single");
-  }
+  
   if (btnSwGreen.isDoubleClick()) {
-    Serial.println("double");
+    stateSwitch.SW_GREEN = DOUBLE;
+  } else if (btnSwGreen.isLongClick()) {
+    stateSwitch.SW_GREEN = LONG;
+  } else {
+    stateSwitch.SW_GREEN = RELEASED;
   }
-  if (btnSwGreen.isLongClick()) {
-    Serial.println("long");
+  
+  if (btnSwRed.isDoubleClick()) {
+    stateSwitch.SW_RED = DOUBLE;
+  } else if (btnSwRed.isLongClick()) {
+    stateSwitch.SW_RED = LONG;
+  } else {
+    stateSwitch.SW_RED = RELEASED;
   }
-  if (btnSwGreen.isReleased()) {
-    Serial.println("up");
+  
+  if (digitalRead(PIN_INPUT_ESTOP_L)) {
+    stateSwitch.ESTOP_L = PUSHED;
+  } else {
+    stateSwitch.ESTOP_L = RELEASED;
+  }
+  
+  if (digitalRead(PIN_INPUT_ESTOP_R)) {
+    stateSwitch.ESTOP_R = PUSHED;
+  } else {
+    stateSwitch.ESTOP_R = RELEASED;
   }
 }
