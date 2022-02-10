@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string>
 #include <unistd.h>
+#include <boost/thread.hpp>
 
 std::string exec(const char* cmd) {
     char buffer[128];
@@ -24,21 +25,48 @@ std::string exec(const char* cmd) {
     return result;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     std::string ret;
 
-    // 쓰레드로 실행할 것
-    printf("$ roslaunch recipelab sim_pallete.launch\n");
-    ret = exec("roslaunch recipelab sim_pallete.launch");
-    printf("ret: %s\n", ret.c_str());
+    printf("argv[1]: %s\n", argv[1]);
 
-    // sleep(3);
+    const char* rosOpenCmd = "roslaunch recipelab sim_pallete.launch";
+    const char* rosCheckCmd = "ps -ef|grep 'rosmaster'|grep -v 'grep'|awk '{print $2}'";
+    const char* rosCloseCmd = "kill `ps -ef|grep 'rosmaster'|grep -v 'grep'|awk '{print $2}'`";
+    
+    printf("rosOpenCmd: %s\n", rosOpenCmd);
+    printf("rosCheckCmd: %s\n", rosCheckCmd);
+    printf("rosCloseCmd: %s\n", rosCloseCmd);
 
-    // printf("$ rosnode kill --all\n");
-    // ret = exec("rosnode kill --all");
-    // printf("ret: %s\n", ret.c_str());
+    boost::thread *threadRosOpen;
 
-    // printf("finished\n");
+    while(true)
+    {
+        switch (getchar()) {
+            case 'r':
+                threadRosOpen = new boost::thread(exec, rosOpenCmd);
+                printf("RosOpen\n");
+                break;
+            case 'c':
+                ret = exec(rosCheckCmd);
+                printf("RosCheck %s\n", ret.c_str());
+                break;
+            case 'k':
+                ret = exec(rosCloseCmd);
+                printf("RosClose\n");
+                break;
+            case 'q':
+                printf("QUIT\n");
+                goto QUIT;
+            default:
+            break;
+        }
+    }
+    QUIT:
+
+    printf("[c] threadRosOpen join\n");
+    threadRosOpen->join();
+    printf("[c] threadRosOpen joined\n");
 
     return 0;
 }
