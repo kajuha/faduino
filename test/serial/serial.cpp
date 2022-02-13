@@ -22,29 +22,27 @@ private:
 
 	int fd;
 	unsigned char buffer_rx[BUFSIZ];
+	unsigned char buffer_tx[BUFSIZ];
 public:
 	Faduino(std::string serial_port, int baudrate) {		
 		this->serial_port = serial_port;
 		this->baudrate = baudrate;
 	}
 
-	bool initialize()
-	{
+	bool init()	{
 		const char* COMM_PORT = serial_port.c_str();
 
-		if(-1 == (fd = open(COMM_PORT, O_RDWR)))
-		{
-			printf("Error opening port\n");
-			printf("Set port parameters using the following Linux command:\n stty -F %s %d raw\n", COMM_PORT, baudrate);
-			printf("You may need to have ROOT access");
+		if(-1 == (fd = open(COMM_PORT, O_RDWR))) {
+			printf("error opening port\n");
+			printf("set port parameters using the following Linux command:\n stty -F %s %d raw\n", COMM_PORT, baudrate);
+			printf("you may need to have ROOT access");
 			return false;
 		}
 
 		struct termios newtio;
 		memset(&newtio, 0, sizeof(newtio));
 		
-		switch(baudrate)
-		{
+		switch(baudrate) {
 			case 921600:
 				newtio.c_cflag = B921600;
 				break;
@@ -79,7 +77,7 @@ public:
 				newtio.c_cflag = B4800;
 				break;
 			default:
-				printf("Unsupported baudrate!");
+				printf("unsupported baudrate!");
 				exit(0);
 		}
 		newtio.c_cflag |= CS8;
@@ -103,14 +101,28 @@ public:
 		return true;
 	}
 
-	void closeSensor()
-	{
+	void closeDevice() {
 		close(fd);
-		printf("Closing faduino\n");
+		printf("closing faduino\n");
 	}
 
-	bool receiveData()
-	{
+	bool sendData(ValueOutput valueOutput) {
+		// 송신 포맷 생성
+		buffer_tx[IDX_HEAD] = DATA_HEAD;
+		buffer_tx[IDX_TYPE] = TYPE_CMD::CMD;
+		*((unsigned long*)(buffer_tx+IDX_TS)) = 0x12345678;
+		memcpy(buffer_tx+IDX_DATA, (char*)&valueOutput, SIZE_DATA_OUTPUT);
+		// crc16 계산
+		unsigned short crc16in = CRC::CRC16((unsigned char*)(buffer_tx+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_OUTPUT);
+		sprintf((char*)(buffer_tx+IDX_CRC16_OUTPUT), "%04x", crc16in);
+		buffer_tx[IDX_TAIL_OUTPUT] = DATA_TAIL;
+
+		write(fd, buffer_tx, SIZE_TOTAL_OUTPUT);
+
+		return true;
+	}
+
+	bool receiveData(bool enableParsing=true) {
 		int rx_size;
 
 		memset(buffer_rx, '\0', sizeof(buffer_rx));
@@ -119,6 +131,18 @@ public:
 
 		for (int i=0; i<rx_size; i++) {
 			que.push(buffer_rx[i]);
+		}
+
+		if (enableParsing) {
+			parseData();
+		} else {
+			if (que.size()) {
+				for (int i=0; i<rx_size; i++) {
+					printf("[%02x]", que.front());
+					que.pop();
+				}
+				printf("\n");
+			}
 		}
 
 		return true;
@@ -171,7 +195,7 @@ public:
 			case FSM_SERIAL::CRC16:
 				if (que.size() >= SIZE_CRC16) {
 					for (int i=0; i<SIZE_CRC16; i++) {
-						packet[IDX_CRC16+i] = que.front();
+						packet[IDX_CRC16_INPUT+i] = que.front();
 						que.pop();
 					}
 
@@ -180,8 +204,8 @@ public:
 				break;
 			case FSM_SERIAL::TAIL:
 				if (que.size() >= SIZE_TAIL) {
-                    packet[IDX_TAIL] = que.front();
-					if (packet[IDX_TAIL] == DATA_TAIL) {
+                    packet[IDX_TAIL_INPUT] = que.front();
+					if (packet[IDX_TAIL_INPUT] == DATA_TAIL) {
 						state = FSM_SERIAL::OK;
 					} else {
 						printf("FSM_SERIAL::TAIL not Match\n");
@@ -207,19 +231,19 @@ public:
 		return false;
 	}
 
-	void checksumData(unsigned char* packet)
-	{
+	void checksumData(unsigned char* packet) {
         // 수신부 crc16 문자열 추출
         unsigned short crc16out;
-        sscanf((const char*)(packet+IDX_CRC16), "%04x", (unsigned int*)&crc16out);
+        sscanf((const char*)(packet+IDX_CRC16_INPUT), "%04x", (unsigned int*)&crc16out);
 
         // 수신부 data의 crc16 계산
         unsigned short crc16 = CRC::CRC16((unsigned char*)(packet+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
 
         if (crc16out == crc16) {
             sscanf((const char*)(packet+IDX_DATA), "%01d%01d%01d%01d",
-                &valueInput.estop_l, &valueInput.estop_r, &valueInput.sw_green, &valueInput.sw_red);
-            #if 1
+                &valueInput.estop_l, &valueInput.estop_r,
+				&valueInput.sw_green, &valueInput.sw_red);
+            #if 0
             packet[IDX_TYPE];
             *((int*)(packet+IDX_TS));
             valueInput.estop_l;
@@ -248,8 +272,8 @@ int main(int argc, char* argv[]) {
 
 	Faduino faduino(serial_port, baudrate);
 
-	if(faduino.initialize() == false) {
-		printf("Initialize() returns false, please check your devices.\n");
+	if(faduino.init() == false) {
+		printf("init() returns false, please check your devices.\n");
 		printf("Set port parameters using the following Linux command:\n stty -F /dev/ttyUSB? %d raw\n", baudrate);
 		printf("You may need to have ROOT access\n");
 		return 0;
@@ -257,12 +281,71 @@ int main(int argc, char* argv[]) {
 		printf("faduino Initialization OK!\n");
 	}
 
+	int state = 0;
+	ValueOutput valueOutput;
+
 	while (true) {
+		#if 0
 		faduino.receiveData();
-		faduino.parseData();
+		#else
+		faduino.receiveData(false);
+		#endif
+
+		#if 1
+		switch (state) {
+			case 0:
+				sleep(1);
+				valueOutput.led_green.on = 0x01;
+				valueOutput.led_green.off = 0x02;
+				valueOutput.led_red.on = 0x03;
+				valueOutput.led_red.off = 0x04;
+				valueOutput.buzzer.on = 0x05;
+				valueOutput.buzzer.off = 0x06;
+				faduino.sendData(valueOutput);
+				state += 1;
+				break;
+			case 1:
+				sleep(1);
+				valueOutput.led_green.on = 0x01;
+				valueOutput.led_green.off = 0x02;
+				valueOutput.led_red.on = 0x03;
+				valueOutput.led_red.off = 0x04;
+				valueOutput.buzzer.on = 0x05;
+				valueOutput.buzzer.off = 0x06;
+				faduino.sendData(valueOutput);
+				state += 1;
+				break;
+			case 2:
+				sleep(1);
+				valueOutput.led_green.on = 0x01;
+				valueOutput.led_green.off = 0x02;
+				valueOutput.led_red.on = 0x03;
+				valueOutput.led_red.off = 0x04;
+				valueOutput.buzzer.on = 0x05;
+				valueOutput.buzzer.off = 0x06;
+				faduino.sendData(valueOutput);
+				state += 1;
+				break;
+			case 3:
+				sleep(1);
+				valueOutput.led_green.on = 0x01;
+				valueOutput.led_green.off = 0x02;
+				valueOutput.led_red.on = 0x03;
+				valueOutput.led_red.off = 0x04;
+				valueOutput.buzzer.on = 0x05;
+				valueOutput.buzzer.off = 0x06;
+				faduino.sendData(valueOutput);
+				state += 1;
+				break;
+			case 4:
+				break;
+			default:
+				break;
+		}
+		#endif
 	}
 
-	faduino.closeSensor();
+	faduino.closeDevice();
 
 	return 0;
 }

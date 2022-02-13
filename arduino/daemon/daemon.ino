@@ -41,16 +41,36 @@ void loop() {
 
   if (swGreen.isDoubleClick()) {
     valueInput.sw_green = DOUBLE;
+    ledGreen.setOnOffTime(200, 0);
+    ledRed.setOnOffTime(200, 0);
+    buzzer.setOnOffTime(200, 0);
+    // 이 명령으로 프로그램 구동
   } else if (swGreen.isLongClick()) {
     valueInput.sw_green = LONG;
+    #if 1
+    // 시험용으로 LED 및 부저 끄기
+    ledGreen.setOnOffTime(0, 200);
+    ledRed.setOnOffTime(0, 200);
+    buzzer.setOnOffTime(0, 200);
+    #endif
   } else {
     valueInput.sw_green = RELEASED;
   }
   
   if (swRed.isDoubleClick()) {
     valueInput.sw_red = DOUBLE;
+    ledGreen.setOnOffTime(200, 0);
+    ledRed.setOnOffTime(200, 0);
+    buzzer.setOnOffTime(200, 0);
+    // 이 명령으로 프로그램 정지
   } else if (swRed.isLongClick()) {
     valueInput.sw_red = LONG;
+    #if 1
+    // 시험용으로 LED 및 부저 끄기
+    ledGreen.setOnOffTime(0, 200);
+    ledRed.setOnOffTime(0, 200);
+    buzzer.setOnOffTime(0, 200);
+    #endif
   } else {
     valueInput.sw_red = RELEASED;
   }
@@ -87,36 +107,45 @@ void loop() {
     stateEstopR = STATE_ESTOP::ACTION;
   }
   // 송신 데이터 처리
+  #if 0
   if (valueInputBefore.estop_l != valueInput.estop_l ||
-    valueInputBefore.estop_r != valueInput.estop_r ||
-    valueInputBefore.sw_green != valueInput.sw_green ||
-    valueInputBefore.sw_red != valueInput.sw_red) {
-      valueInputBefore = valueInput;
-      static char buffer[BUFSIZ];
+      valueInputBefore.estop_r != valueInput.estop_r ||
+      valueInputBefore.sw_green != valueInput.sw_green ||
+      valueInputBefore.sw_red != valueInput.sw_red) {
+    valueInputBefore = valueInput;
+    static char buffer[BUFSIZ];
 
-      // 송신 포맷 생성
-      buffer[IDX_HEAD] = DATA_HEAD;
-      buffer[IDX_TYPE] = TYPE_CMD::CMD;
-      *((unsigned long*)(buffer+IDX_TS)) = millis();
-      sprintf(buffer+IDX_DATA, "%01d%01d%01d%01d", valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red);
-      // crc16 계산
-      unsigned short crc16in = CRC::CRC16((unsigned char*)(buffer+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
-      sprintf(buffer+IDX_CRC16, "%04x", crc16in);
-      buffer[IDX_TAIL] = DATA_TAIL;
+    // 송신 포맷 생성
+    buffer[IDX_HEAD] = DATA_HEAD;
+    buffer[IDX_TYPE] = TYPE_CMD::CMD;
+    *((unsigned long*)(buffer+IDX_TS)) = millis();
+    sprintf(buffer+IDX_DATA, "%01d%01d%01d%01d", valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red);
+    // crc16 계산
+    unsigned short crc16in = CRC::CRC16((unsigned char*)(buffer+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
+    sprintf(buffer+IDX_CRC16_INPUT, "%04x", crc16in);
+    buffer[IDX_TAIL_INPUT] = DATA_TAIL;
 
-      Serial.write(buffer, SIZE_TOTAL_INPUT);
-    }
+    Serial.write(buffer, SIZE_TOTAL_INPUT);
+  }
+  #endif
   // 수신 데이터 처리
+  //   가. 송신 데이터에 대한 ACK
+  //   나. 수신 데이터(출력)에 대한 현재 상태 요청에 대한 응답
+  //   다. 수신 데이터(출력)에 대한 설정
+  #if 1
   parseData();
+  #endif
   // 출력 처리
+  #if 0
   ledGreen.Update();
   ledRed.Update();
   buzzer.Update();
+  #endif
 }
 
 bool parseData() {
   static int state = FSM_SERIAL::HEAD;
-  static unsigned char packet[SIZE_TOTAL_INPUT] = {'\0', };
+  static unsigned char packet[SIZE_TOTAL_OUTPUT] = {'\0', };
 
   switch (state) {
     case FSM_SERIAL::HEAD:
@@ -142,6 +171,7 @@ bool parseData() {
         packet[IDX_TYPE] = que.front();
         que.pop();
         #endif
+        
         state = FSM_SERIAL::TS;
       }
       break;
@@ -160,11 +190,11 @@ bool parseData() {
       }
       break;
     case FSM_SERIAL::DATA:
-      if (Serial.available() >= SIZE_DATA_INPUT) {
+      if (Serial.available() >= SIZE_DATA_OUTPUT) {
         #if 1
-        Serial.readBytes(packet+IDX_DATA, SIZE_DATA_INPUT);
+        Serial.readBytes(packet+IDX_DATA, SIZE_DATA_OUTPUT);
         #else
-        for (int i=0; i<SIZE_DATA_INPUT; i++) {
+        for (int i=0; i<SIZE_DATA_OUTPUT; i++) {
           packet[IDX_DATA+i] = que.front();
           que.pop();
         }
@@ -176,7 +206,7 @@ bool parseData() {
     case FSM_SERIAL::CRC16:
       if (Serial.available() >= SIZE_CRC16) {
         #if 1
-        Serial.readBytes(packet+IDX_CRC16, SIZE_CRC16);
+        Serial.readBytes(packet+IDX_CRC16_OUTPUT, SIZE_CRC16);
         #else
         for (int i=0; i<SIZE_CRC16; i++) {
           packet[IDX_CRC16+i] = que.front();
@@ -190,12 +220,21 @@ bool parseData() {
     case FSM_SERIAL::TAIL:
       if (Serial.available() >= SIZE_TAIL) {
         #if 1
-        Serial.readBytes(packet+IDX_TAIL, SIZE_TAIL);
+        Serial.readBytes(packet+IDX_TAIL_OUTPUT, SIZE_TAIL);
         #else
         packet[IDX_TAIL] = que.front();
         que.pop();
         #endif
-        if (packet[IDX_TAIL] == DATA_TAIL) {
+        // readBytes가 먹히지 않음
+        #if 1
+        if (Serial.available()) {
+          Serial.println(Serial.available());
+          Serial.println(Serial.peek());
+          Serial.println(IDX_TAIL_OUTPUT);
+          Serial.write(packet, SIZE_TOTAL_OUTPUT);
+        }
+        #endif
+        if (packet[IDX_TAIL_OUTPUT] == DATA_TAIL) {
           state = FSM_SERIAL::OK;
         } else {
           state = FSM_SERIAL::HEAD;
@@ -205,7 +244,7 @@ bool parseData() {
     case FSM_SERIAL::OK:
       checksumData(packet);
 
-      memset(packet, '\0', SIZE_TOTAL_INPUT);
+      memset(packet, '\0', SIZE_TOTAL_OUTPUT);
       
       state = FSM_SERIAL::HEAD;
 
@@ -223,7 +262,7 @@ void checksumData(unsigned char* packet)
 {
   // 수신부 crc16 문자열 추출
   unsigned short crc16out;
-  sscanf((const char*)(packet+IDX_CRC16), "%04x", (unsigned int*)&crc16out);
+  sscanf((const char*)(packet+IDX_CRC16_OUTPUT), "%04x", (unsigned int*)&crc16out);
 
   // 수신부 data의 crc16 계산
   unsigned short crc16 = CRC::CRC16((unsigned char*)(packet+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);

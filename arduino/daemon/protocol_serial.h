@@ -1,8 +1,8 @@
 #pragma once
 
-#define BAUDRATE  115200
+#define BAUDRATE 115200
 
-#pragma pack(1)
+#pragma pack(push, 1)
 typedef struct _ValueInput {
   uint16_t estop_l;
   uint16_t estop_r;
@@ -21,7 +21,7 @@ typedef struct _ValueOutput {
   TimeOnOff led_red;
   TimeOnOff buzzer;
 } ValueOutput;
-#pragma pack(reset)
+#pragma pack(pop)
 
 // ASCII, BINARY 타입을 혼용하고 있음
 // 하나로 변경할 것
@@ -29,16 +29,19 @@ typedef struct _ValueOutput {
 #define SIZE_TYPE   1
 #define SIZE_TS     4
 #define SIZE_DATA_INPUT   4
-#define SIZE_DATA_OUTPUT  4
+#define SIZE_DATA_OUTPUT  18
 #define SIZE_CRC16  4
 #define SIZE_TAIL   1
 #define SIZE_TOTAL_INPUT  (SIZE_HEAD+SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT+SIZE_CRC16+SIZE_TAIL)
+#define SIZE_TOTAL_OUTPUT (SIZE_HEAD+SIZE_TYPE+SIZE_TS+SIZE_DATA_OUTPUT+SIZE_CRC16+SIZE_TAIL)
 #define IDX_HEAD    0
-#define IDX_TYPE    (SIZE_HEAD)
-#define IDX_TS      (SIZE_HEAD+SIZE_TYPE)
-#define IDX_DATA    (SIZE_HEAD+SIZE_TYPE+SIZE_TS)
-#define IDX_CRC16   (SIZE_HEAD+SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT)
-#define IDX_TAIL    (SIZE_HEAD+SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT+SIZE_CRC16)
+#define IDX_TYPE          (SIZE_HEAD)
+#define IDX_TS            (SIZE_HEAD+SIZE_TYPE)
+#define IDX_DATA          (SIZE_HEAD+SIZE_TYPE+SIZE_TS)
+#define IDX_CRC16_INPUT   (SIZE_HEAD+SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT)
+#define IDX_CRC16_OUTPUT  (SIZE_HEAD+SIZE_TYPE+SIZE_TS+SIZE_DATA_OUTPUT)
+#define IDX_TAIL_INPUT    (SIZE_HEAD+SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT+SIZE_CRC16)
+#define IDX_TAIL_OUTPUT   (SIZE_HEAD+SIZE_TYPE+SIZE_TS+SIZE_DATA_OUTPUT+SIZE_CRC16)
 #define DATA_HEAD   0x02
 #define DATA_TAIL   0x03
 
