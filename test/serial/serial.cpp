@@ -9,6 +9,11 @@
 #include <iostream>
 #include <queue>
 
+#include <chrono>
+#include <iostream>
+#include <sys/time.h>
+#include <ctime>
+
 #include "../../arduino/daemon/protocol_serial.h"
 #include "serial.h"
 
@@ -107,10 +112,15 @@ public:
 	}
 
 	bool sendData(ValueOutput valueOutput) {
+        static struct timeval time_now{};
+        static uint32_t micros;
+        gettimeofday(&time_now, nullptr);
+        micros = (uint32_t)time_now.tv_usec;
+
 		// 송신 포맷 생성
 		buffer_tx[IDX_HEAD] = DATA_HEAD;
 		buffer_tx[IDX_TYPE] = TYPE_CMD::CMD;
-		*((unsigned long*)(buffer_tx+IDX_TS)) = 0x12345678;
+		*((uint32_t*)(buffer_tx+IDX_TS)) = micros;
 		memcpy(buffer_tx+IDX_DATA, (char*)&valueOutput, SIZE_DATA_OUTPUT);
 		// crc16 계산
 		unsigned short crc16in = CRC::CRC16((unsigned char*)(buffer_tx+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_OUTPUT);
@@ -209,6 +219,10 @@ public:
 						state = FSM_SERIAL::OK;
 					} else {
 						printf("FSM_SERIAL::TAIL not Match\n");
+						for (int i=0; i<SIZE_TOTAL_INPUT; i++) {
+							printf("[%02x]", packet[i]);
+						}
+						printf("\n");
 						state = FSM_SERIAL::HEAD;
 					}
 					que.pop();
@@ -240,16 +254,110 @@ public:
         unsigned short crc16 = CRC::CRC16((unsigned char*)(packet+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
 
         if (crc16out == crc16) {
-            sscanf((const char*)(packet+IDX_DATA), "%01d%01d%01d%01d",
+            sscanf((const char*)(packet+IDX_DATA), "%01hd%01hd%01hd%01hd",
                 &valueInput.estop_l, &valueInput.estop_r,
 				&valueInput.sw_green, &valueInput.sw_red);
-            #if 0
-            packet[IDX_TYPE];
-            *((int*)(packet+IDX_TS));
-            valueInput.estop_l;
-            valueInput.estop_r;
-            valueInput.sw_green;
-            valueInput.sw_red;
+            #if 1
+            printf("type:%d, ts:%d\n",
+                packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
+            switch (valueInput.estop_l) {
+				case PUSHED:
+					ValueOutput valueOutput;
+					valueOutput.led_green.on = 0;
+					valueOutput.led_green.off = 1000;
+					valueOutput.led_red.on = 0;
+					valueOutput.led_red.off = 1000;
+					valueOutput.buzzer.on = 500;
+					valueOutput.buzzer.off = 500;
+					sendData(valueOutput);
+					break;
+				case RELEASED:
+					break;
+				case DOUBLE:
+					break;
+				case LONG:
+					break;
+				default:
+					break;
+			}
+            switch (valueInput.estop_r) {
+				case PUSHED:
+					ValueOutput valueOutput;
+					valueOutput.led_green.on = 0;
+					valueOutput.led_green.off = 1000;
+					valueOutput.led_red.on = 0;
+					valueOutput.led_red.off = 1000;
+					valueOutput.buzzer.on = 1000;
+					valueOutput.buzzer.off = 1000;
+					sendData(valueOutput);
+					break;
+				case RELEASED:
+					break;
+				case DOUBLE:
+					break;
+				case LONG:
+					break;
+				default:
+					break;
+			}
+            switch (valueInput.sw_green) {
+				case PUSHED:
+					break;
+				case RELEASED:
+					break;
+				case DOUBLE:
+					ValueOutput valueOutput;
+					valueOutput.led_green.on = 500;
+					valueOutput.led_green.off = 500;
+					valueOutput.led_red.on = 500;
+					valueOutput.led_red.off = 500;
+					valueOutput.buzzer.on = 500;
+					valueOutput.buzzer.off = 500;
+					valueOutput.buzzer.act = 2;
+					sendData(valueOutput);
+					break;
+				case LONG:
+					valueOutput.led_green.on = 0;
+					valueOutput.led_green.off = 1000;
+					valueOutput.led_red.on = 0;
+					valueOutput.led_red.off = 1000;
+					valueOutput.buzzer.on = 0;
+					valueOutput.buzzer.off = 1000;
+					valueOutput.buzzer.act = STATE_ACT::INFINITE;
+					sendData(valueOutput);
+					break;
+				default:
+					break;
+			}
+            switch (valueInput.sw_red) {
+				case PUSHED:
+					break;
+				case RELEASED:
+					break;
+				case DOUBLE:
+					ValueOutput valueOutput;
+					valueOutput.led_green.on = 1000;
+					valueOutput.led_green.off = 1000;
+					valueOutput.led_red.on = 1000;
+					valueOutput.led_red.off = 1000;
+					valueOutput.buzzer.on = 1000;
+					valueOutput.buzzer.off = 1000;
+					valueOutput.buzzer.act = 3;
+					sendData(valueOutput);
+					break;
+				case LONG:
+					valueOutput.led_green.on = 0;
+					valueOutput.led_green.off = 1000;
+					valueOutput.led_red.on = 0;
+					valueOutput.led_red.off = 1000;
+					valueOutput.buzzer.on = 0;
+					valueOutput.buzzer.off = 1000;
+					valueOutput.buzzer.act = STATE_ACT::INFINITE;
+					sendData(valueOutput);
+					break;
+				default:
+					break;
+			}
             #else
             printf("type:%d, ts:%d\n",
                 packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
@@ -281,67 +389,11 @@ int main(int argc, char* argv[]) {
 		printf("faduino Initialization OK!\n");
 	}
 
-	int state = 0;
-	ValueOutput valueOutput;
-
 	while (true) {
 		#if 0
 		faduino.receiveData();
 		#else
-		faduino.receiveData(false);
-		#endif
-
-		#if 1
-		switch (state) {
-			case 0:
-				sleep(1);
-				valueOutput.led_green.on = 0x01;
-				valueOutput.led_green.off = 0x02;
-				valueOutput.led_red.on = 0x03;
-				valueOutput.led_red.off = 0x04;
-				valueOutput.buzzer.on = 0x05;
-				valueOutput.buzzer.off = 0x06;
-				faduino.sendData(valueOutput);
-				state += 1;
-				break;
-			case 1:
-				sleep(1);
-				valueOutput.led_green.on = 0x01;
-				valueOutput.led_green.off = 0x02;
-				valueOutput.led_red.on = 0x03;
-				valueOutput.led_red.off = 0x04;
-				valueOutput.buzzer.on = 0x05;
-				valueOutput.buzzer.off = 0x06;
-				faduino.sendData(valueOutput);
-				state += 1;
-				break;
-			case 2:
-				sleep(1);
-				valueOutput.led_green.on = 0x01;
-				valueOutput.led_green.off = 0x02;
-				valueOutput.led_red.on = 0x03;
-				valueOutput.led_red.off = 0x04;
-				valueOutput.buzzer.on = 0x05;
-				valueOutput.buzzer.off = 0x06;
-				faduino.sendData(valueOutput);
-				state += 1;
-				break;
-			case 3:
-				sleep(1);
-				valueOutput.led_green.on = 0x01;
-				valueOutput.led_green.off = 0x02;
-				valueOutput.led_red.on = 0x03;
-				valueOutput.led_red.off = 0x04;
-				valueOutput.buzzer.on = 0x05;
-				valueOutput.buzzer.off = 0x06;
-				faduino.sendData(valueOutput);
-				state += 1;
-				break;
-			case 4:
-				break;
-			default:
-				break;
-		}
+		faduino.receiveData(true);
 		#endif
 	}
 
