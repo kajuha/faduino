@@ -1,52 +1,59 @@
 #pragma once
 
-class Flasher
-{
-	int ledPin;      // the number of the LED pin
-	long OnTime;     // milliseconds of on-time
-	long OffTime;    // milliseconds of off-time
+#include "protocol_serial.h"
 
-	// These maintain the current state
-	int ledState;             		// ledState used to set the LED
-	unsigned long previousMillis;  	// will store last time LED was updated
+class Flasher {
+	int ledPin;
+	long OnTime;
+	long OffTime;
+	long CntActual, CntTarget;
 
-  // Constructor - creates a Flasher 
-  // and initializes the member variables and state
+	int ledState;
+	unsigned long previousMillis;
+
   public:
-  Flasher(int pin, long on, long off)
-  {
-	ledPin = pin;
-	pinMode(ledPin, OUTPUT);     
-	  
-	OnTime = on;
-	OffTime = off;
-	
-	ledState = LOW; 
-	previousMillis = 0;
-  }
-
-  void Update()
-  {
-    // check to see if it's time to change the state of the LED
-    unsigned long currentMillis = millis();
-     
-    if((ledState == HIGH) && (currentMillis - previousMillis >= OnTime))
-    {
-    	ledState = LOW;  // Turn it off
-      previousMillis = currentMillis;  // Remember the time
-      digitalWrite(ledPin, ledState);  // Update the actual LED
-    }
-    else if ((ledState == LOW) && (currentMillis - previousMillis >= OffTime))
-    {
-      ledState = HIGH;  // turn it on
-      previousMillis = currentMillis;   // Remember the time
-      digitalWrite(ledPin, ledState);	  // Update the actual LED
-    }
-  }
-
-  void setOnOffTime(long on, long off) {
+  Flasher(int pin, long on, long off, long count) {
+    ledPin = pin;
+    pinMode(ledPin, OUTPUT);     
+      
     OnTime = on;
     OffTime = off;
+
+    CntTarget = count;
+    CntActual = 0;
+    
+    ledState = LOW; 
+    previousMillis = 0;
+  }
+
+  void Update() {
+    unsigned long currentMillis = millis();
+
+    if (CntTarget == CntActual) {
+      return;
+    } else if (CntTarget == INFINITE) {
+    } else {
+    }
+     
+    if((ledState == HIGH) && (currentMillis - previousMillis >= OnTime)) {
+      ledState = LOW;
+      previousMillis = currentMillis;
+      digitalWrite(ledPin, ledState);
+
+      CntActual++;
+    } else if ((ledState == LOW) && (currentMillis - previousMillis >= OffTime)) {
+      ledState = HIGH;
+      previousMillis = currentMillis;
+      digitalWrite(ledPin, ledState);
+    }
+  }
+
+  void setOnOffTime(long on, long off, long act) {
+    OnTime = on;
+    OffTime = off;
+
+    CntTarget = act;
+    CntActual = 0;
     
     ledState = LOW; 
     previousMillis = 0;

@@ -19,14 +19,12 @@ ValueOutput valueOutput, valueOutputBefore;
 PinButton swGreen(PIN_INPUT_SW_GREEN, INPUT);
 PinButton swRed(PIN_INPUT_SW_RED, INPUT);
 
-Flasher buzzer(PIN_OUTPUT_BUZZER, 0, 0);
-Flasher ledGreen(PIN_OUTPUT_LED_GREEN, 0, 0);
-Flasher ledRed(PIN_OUTPUT_LED_RED, 0, 0);
+Flasher buzzer(PIN_OUTPUT_BUZZER, 0, 0, INFINITE);
+Flasher ledGreen(PIN_OUTPUT_LED_GREEN, 0, 0, INFINITE);
+Flasher ledRed(PIN_OUTPUT_LED_RED, 0, 0, INFINITE);
 
 int stateEstopL;
 int stateEstopR;
-
-bool parseData();
 
 void setup() {
   Serial.begin(BAUDRATE);
@@ -41,36 +39,16 @@ void loop() {
 
   if (swGreen.isDoubleClick()) {
     valueInput.sw_green = DOUBLE;
-    ledGreen.setOnOffTime(200, 0);
-    ledRed.setOnOffTime(200, 0);
-    buzzer.setOnOffTime(200, 0);
-    // 이 명령으로 프로그램 구동
   } else if (swGreen.isLongClick()) {
     valueInput.sw_green = LONG;
-    #if 1
-    // 시험용으로 LED 및 부저 끄기
-    ledGreen.setOnOffTime(0, 200);
-    ledRed.setOnOffTime(0, 200);
-    buzzer.setOnOffTime(0, 200);
-    #endif
   } else {
     valueInput.sw_green = RELEASED;
   }
   
   if (swRed.isDoubleClick()) {
     valueInput.sw_red = DOUBLE;
-    ledGreen.setOnOffTime(200, 0);
-    ledRed.setOnOffTime(200, 0);
-    buzzer.setOnOffTime(200, 0);
-    // 이 명령으로 프로그램 정지
   } else if (swRed.isLongClick()) {
     valueInput.sw_red = LONG;
-    #if 1
-    // 시험용으로 LED 및 부저 끄기
-    ledGreen.setOnOffTime(0, 200);
-    ledRed.setOnOffTime(0, 200);
-    buzzer.setOnOffTime(0, 200);
-    #endif
   } else {
     valueInput.sw_red = RELEASED;
   }
@@ -107,7 +85,6 @@ void loop() {
     stateEstopR = STATE_ESTOP::ACTION;
   }
   // 송신 데이터 처리
-  #if 0
   if (valueInputBefore.estop_l != valueInput.estop_l ||
       valueInputBefore.estop_r != valueInput.estop_r ||
       valueInputBefore.sw_green != valueInput.sw_green ||
@@ -118,7 +95,7 @@ void loop() {
     // 송신 포맷 생성
     buffer[IDX_HEAD] = DATA_HEAD;
     buffer[IDX_TYPE] = TYPE_CMD::CMD;
-    *((unsigned long*)(buffer+IDX_TS)) = millis();
+    *((unsigned long*)(buffer+IDX_TS)) = micros();
     sprintf(buffer+IDX_DATA, "%01d%01d%01d%01d", valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red);
     // crc16 계산
     unsigned short crc16in = CRC::CRC16((unsigned char*)(buffer+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
@@ -127,20 +104,15 @@ void loop() {
 
     Serial.write(buffer, SIZE_TOTAL_INPUT);
   }
-  #endif
   // 수신 데이터 처리
   //   가. 송신 데이터에 대한 ACK
   //   나. 수신 데이터(출력)에 대한 현재 상태 요청에 대한 응답
   //   다. 수신 데이터(출력)에 대한 설정
-  #if 1
   parseData();
-  #endif
   // 출력 처리
-  #if 0
   ledGreen.Update();
   ledRed.Update();
   buzzer.Update();
-  #endif
 }
 
 bool parseData() {
@@ -225,15 +197,6 @@ bool parseData() {
         packet[IDX_TAIL] = que.front();
         que.pop();
         #endif
-        // readBytes가 먹히지 않음
-        #if 1
-        if (Serial.available()) {
-          Serial.println(Serial.available());
-          Serial.println(Serial.peek());
-          Serial.println(IDX_TAIL_OUTPUT);
-          Serial.write(packet, SIZE_TOTAL_OUTPUT);
-        }
-        #endif
         if (packet[IDX_TAIL_OUTPUT] == DATA_TAIL) {
           state = FSM_SERIAL::OK;
         } else {
@@ -265,25 +228,13 @@ void checksumData(unsigned char* packet)
   sscanf((const char*)(packet+IDX_CRC16_OUTPUT), "%04x", (unsigned int*)&crc16out);
 
   // 수신부 data의 crc16 계산
-  unsigned short crc16 = CRC::CRC16((unsigned char*)(packet+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
+  unsigned short crc16 = CRC::CRC16((unsigned char*)(packet+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_OUTPUT);
 
   if (crc16out == crc16) {
-    sscanf((const char*)(packet+IDX_DATA), "%01d%01d%01d%01d",
-        &valueInput.estop_l, &valueInput.estop_r, &valueInput.sw_green, &valueInput.sw_red);
-    #if 1
-    packet[IDX_TYPE];
-    *((int*)(packet+IDX_TS));
-    valueInput.estop_l;
-    valueInput.estop_r;
-    valueInput.sw_green;
-    valueInput.sw_red;
-    #else
-    printf("type:%d, ts:%d\n",
-        packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
-    printf("estop_l:%d, estop_r:%d, sw_green:%d, sw_red:%d\n",
-        valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red);
-    #endif
+    memcpy(&valueOutput, packet+IDX_DATA, SIZE_DATA_OUTPUT);
+    ledGreen.setOnOffTime(valueOutput.led_green.on, valueOutput.led_green.off, valueOutput.led_green.act);
+    ledRed.setOnOffTime(valueOutput.led_red.on, valueOutput.led_red.off, valueOutput.led_red.act);
+    buzzer.setOnOffTime(valueOutput.buzzer.on, valueOutput.buzzer.off, valueOutput.buzzer.act);
   } else {
-      printf("crc16 not matched !!!\n");
   }
 }

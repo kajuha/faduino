@@ -11,9 +11,9 @@ typedef struct _ValueInput {
 } ValueInput;
 
 typedef struct _TimeOnOff {
-  uint16_t act;
   uint16_t on;
   uint16_t off;
+  uint16_t act;
 } TimeOnOff;
 
 typedef struct _ValueOutput {
@@ -44,6 +44,10 @@ typedef struct _ValueOutput {
 #define IDX_TAIL_OUTPUT   (SIZE_HEAD+SIZE_TYPE+SIZE_TS+SIZE_DATA_OUTPUT+SIZE_CRC16)
 #define DATA_HEAD   0x02
 #define DATA_TAIL   0x03
+
+enum STATE_ACT {
+  INFINITE, ONCE, TWICE, THRICE
+};
 
 enum STATE_INPUT {
   RELEASED, PUSHED, DOUBLE, LONG
