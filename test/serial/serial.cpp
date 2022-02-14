@@ -262,6 +262,7 @@ public:
                 packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
             switch (valueInput.estop_l) {
 				case PUSHED:
+					#if 0
 					ValueOutput valueOutput;
 					valueOutput.led_green.on = 0;
 					valueOutput.led_green.off = 1000;
@@ -270,6 +271,7 @@ public:
 					valueOutput.buzzer.on = 500;
 					valueOutput.buzzer.off = 500;
 					sendData(valueOutput);
+					#endif
 					break;
 				case RELEASED:
 					break;
@@ -282,6 +284,7 @@ public:
 			}
             switch (valueInput.estop_r) {
 				case PUSHED:
+					#if 0
 					ValueOutput valueOutput;
 					valueOutput.led_green.on = 0;
 					valueOutput.led_green.off = 1000;
@@ -290,6 +293,7 @@ public:
 					valueOutput.buzzer.on = 1000;
 					valueOutput.buzzer.off = 1000;
 					sendData(valueOutput);
+					#endif
 					break;
 				case RELEASED:
 					break;
@@ -306,6 +310,7 @@ public:
 				case RELEASED:
 					break;
 				case DOUBLE:
+					#if 0
 					ValueOutput valueOutput;
 					valueOutput.led_green.on = 500;
 					valueOutput.led_green.off = 500;
@@ -315,8 +320,10 @@ public:
 					valueOutput.buzzer.off = 500;
 					valueOutput.buzzer.act = 2;
 					sendData(valueOutput);
+					#endif
 					break;
 				case LONG:
+					#if 0
 					valueOutput.led_green.on = 0;
 					valueOutput.led_green.off = 1000;
 					valueOutput.led_red.on = 0;
@@ -325,6 +332,7 @@ public:
 					valueOutput.buzzer.off = 1000;
 					valueOutput.buzzer.act = STATE_ACT::INFINITE;
 					sendData(valueOutput);
+					#endif
 					break;
 				default:
 					break;
@@ -335,6 +343,7 @@ public:
 				case RELEASED:
 					break;
 				case DOUBLE:
+					#if 0
 					ValueOutput valueOutput;
 					valueOutput.led_green.on = 1000;
 					valueOutput.led_green.off = 1000;
@@ -344,8 +353,10 @@ public:
 					valueOutput.buzzer.off = 1000;
 					valueOutput.buzzer.act = 3;
 					sendData(valueOutput);
+					#endif
 					break;
 				case LONG:
+					#if 0
 					valueOutput.led_green.on = 0;
 					valueOutput.led_green.off = 1000;
 					valueOutput.led_red.on = 0;
@@ -354,6 +365,7 @@ public:
 					valueOutput.buzzer.off = 1000;
 					valueOutput.buzzer.act = STATE_ACT::INFINITE;
 					sendData(valueOutput);
+					#endif
 					break;
 				default:
 					break;
