@@ -15,5 +15,5 @@ endif
 install:
 	sudo ln -sf /home/kajuha/catkin_ws/src/faduino/daemon/systemd/faduinod.service /etc/systemd/system
 	# sudo systemctl enable faduinod
-	sudo systemctl start faduinod
+	# sudo systemctl start faduinod
 	# sudo systemctl stop faduinod
