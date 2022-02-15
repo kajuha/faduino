@@ -6,21 +6,24 @@
 #include "../arduino/daemon/protocol_serial.h"
 
 class Faduino {
-private:
-	std::string serial_port;
+public:
+	std::string serialPort;
 	int baudrate;
-	std::queue<unsigned char> que;
+	std::queue<unsigned char> queSerialRx;
+
+	std::queue<ValueOutput> queFaduinoCmd;
+	std::queue<ValueInput> queFaduinoState;
 
 	int fd;
-	unsigned char buffer_rx[BUFSIZ];
-	unsigned char buffer_tx[BUFSIZ];
-public:
-	Faduino(std::string serial_port, int baudrate);
-	bool init();
-	void closeDevice();
-	bool sendData(ValueOutput valueOutput);
-	bool receiveData(bool enableParsing=true);
-	bool parseData();
-	void checksumData(unsigned char* packet);
-	int getQueueSize();
+	unsigned char serialBufferRx[BUFSIZ];
+	unsigned char serialBufferTx[BUFSIZ];
+	
+	Faduino(std::string serialPort, int baudrate);
+
+	bool initSerial();
+	void closeSerial();
+	bool sendFaduinoCmd(ValueOutput valueOutput);
+	bool receiveFaduinoState(bool enableParsing=true);
+	bool parseFaduinoState();
+	void checksumFaduinoState(unsigned char* packet);
 };

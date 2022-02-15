@@ -1,0 +1,13 @@
+[Unit]
+Description=faduinod
+
+[Service]
+Type=simple
+WorkingDirectory=/home/kajuha/catkin_ws/src/faduino/daemon/systemd
+ExecStart=/home/kajuha/catkin_ws/src/faduino/daemon/systemd/faduinod.sh
+User=kajuha
+Group=kajuha
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

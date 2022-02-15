@@ -29,9 +29,9 @@ class Flasher {
   void Update() {
     unsigned long currentMillis = millis();
 
-    if (CntTarget == CntActual) {
+    if (CntTarget == INFINITE) {
+    } else if (CntTarget <= CntActual) {
       return;
-    } else if (CntTarget == INFINITE) {
     } else {
     }
      

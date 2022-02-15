@@ -30,7 +30,11 @@ int main(int argc, char* argv[]) {
 
     printf("argv[1]: %s\n", argv[1]);
 
+    #if 0
     const char* rosOpenCmd = "roslaunch recipelab sim_pallete.launch";
+    #else
+    const char* rosOpenCmd = "roslaunch recipelab pallete_can_web.launch";
+    #endif
     const char* rosCheckCmd = "ps -ef|grep 'rosmaster'|grep -v 'grep'|awk '{print $2}'";
     const char* rosCloseCmd = "kill `ps -ef|grep 'rosmaster'|grep -v 'grep'|awk '{print $2}'`";
     
