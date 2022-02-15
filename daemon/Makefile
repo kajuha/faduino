@@ -1,2 +1,2 @@
 all:
-	g++ serial.cpp -o serial -Wall
+	g++ -o faduinod main.cpp serial.cpp -Wall

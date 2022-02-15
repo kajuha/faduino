@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #define BAUDRATE 115200
 
 #pragma pack(push, 1)

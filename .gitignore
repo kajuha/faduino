@@ -3,3 +3,4 @@ test/thread/test_a
 test/thread/test_b
 test/checksum/checksum
 test/serial/serial
+daemon/faduinod
