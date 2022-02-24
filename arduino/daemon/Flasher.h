@@ -3,24 +3,31 @@
 #include "protocol_serial.h"
 
 class Flasher {
-	int ledPin;
-	long OnTime;
-	long OffTime;
-	long CntActual, CntTarget;
+  enum OUTPUT_LASTSTATE {
+    INIT, SET, IDLE
+  };
+  
+	int outputPin;
+	long onTime;
+	long offTime;
+	long actualCount, targetCount;
+  long lastState;
 
 	int ledState;
 	unsigned long previousMillis;
 
   public:
-  Flasher(int pin, long on, long off, long count) {
-    ledPin = pin;
-    pinMode(ledPin, OUTPUT);     
+  Flasher(int outputPin, long onTime, long offTime, long targetCount, long lastState) {
+    this->outputPin = outputPin;
+    pinMode(outputPin, OUTPUT);     
       
-    OnTime = on;
-    OffTime = off;
+    this->onTime = onTime;
+    this->offTime = offTime;
 
-    CntTarget = count;
-    CntActual = 0;
+    this->targetCount = targetCount;
+    this->actualCount = 0;
+
+    this->lastState = lastState;
     
     ledState = LOW; 
     previousMillis = 0;
@@ -28,32 +35,50 @@ class Flasher {
 
   void Update() {
     unsigned long currentMillis = millis();
+    static int fsmLastState = OUTPUT_LASTSTATE::INIT;
 
-    if (CntTarget == INFINITE) {
-    } else if (CntTarget <= CntActual) {
+    if (targetCount == INFINITE) {
+    } else if (targetCount <= actualCount) {
+      switch (fsmLastState) {
+        case OUTPUT_LASTSTATE::INIT:
+          fsmLastState = OUTPUT_LASTSTATE::SET;
+          break;
+        case OUTPUT_LASTSTATE::SET:
+          digitalWrite(outputPin, lastState);
+          fsmLastState = OUTPUT_LASTSTATE::IDLE;
+          break;
+        case OUTPUT_LASTSTATE::IDLE:
+          break;
+        default:
+          break;
+      }
       return;
     } else {
     }
+
+    fsmLastState = OUTPUT_LASTSTATE::INIT;
      
-    if((ledState == HIGH) && (currentMillis - previousMillis >= OnTime)) {
+    if((ledState == HIGH) && (currentMillis - previousMillis >= onTime)) {
       ledState = LOW;
       previousMillis = currentMillis;
-      digitalWrite(ledPin, ledState);
+      digitalWrite(outputPin, ledState);
 
-      CntActual++;
-    } else if ((ledState == LOW) && (currentMillis - previousMillis >= OffTime)) {
+      actualCount++;
+    } else if ((ledState == LOW) && (currentMillis - previousMillis >= offTime)) {
       ledState = HIGH;
       previousMillis = currentMillis;
-      digitalWrite(ledPin, ledState);
+      digitalWrite(outputPin, ledState);
     }
   }
 
-  void setOnOffTime(long on, long off, long act) {
-    OnTime = on;
-    OffTime = off;
+  void setOnOffTime(long onTime, long offTime, long targetCount, long lastState) {
+    this->onTime = onTime;
+    this->offTime = offTime;
 
-    CntTarget = act;
-    CntActual = 0;
+    this->targetCount = targetCount;
+    this->actualCount = 0;
+
+    this->lastState = lastState;
     
     ledState = LOW; 
     previousMillis = 0;

@@ -19,9 +19,9 @@ ValueOutput valueOutput, valueOutputBefore;
 PinButton swGreen(PIN_INPUT_SW_GREEN, INPUT);
 PinButton swRed(PIN_INPUT_SW_RED, INPUT);
 
-Flasher buzzer(PIN_OUTPUT_BUZZER, 0, 0, INFINITE);
-Flasher ledGreen(PIN_OUTPUT_LED_GREEN, 0, 0, INFINITE);
-Flasher ledRed(PIN_OUTPUT_LED_RED, 0, 0, INFINITE);
+Flasher buzzer(PIN_OUTPUT_BUZZER, 0, 0, INFINITE, FADUINO::RELAY::OFF);
+Flasher ledGreen(PIN_OUTPUT_LED_GREEN, 0, 0, INFINITE, FADUINO::RELAY::OFF);
+Flasher ledRed(PIN_OUTPUT_LED_RED, 0, 0, INFINITE, FADUINO::RELAY::OFF);
 
 int stateEstopL;
 int stateEstopR;
@@ -41,6 +41,8 @@ void loop() {
     valueInput.sw_green = DOUBLE;
   } else if (swGreen.isLongClick()) {
     valueInput.sw_green = LONG;
+    // PC 부팅 ON 처리
+    // PC 부팅되었으면 동작되지 않도록 처리
   } else {
     valueInput.sw_green = RELEASED;
   }
@@ -232,9 +234,9 @@ void checksumData(unsigned char* packet)
 
   if (crc16out == crc16) {
     memcpy(&valueOutput, packet+IDX_DATA, SIZE_DATA_OUTPUT);
-    ledGreen.setOnOffTime(valueOutput.led_green.on, valueOutput.led_green.off, valueOutput.led_green.act);
-    ledRed.setOnOffTime(valueOutput.led_red.on, valueOutput.led_red.off, valueOutput.led_red.act);
-    buzzer.setOnOffTime(valueOutput.buzzer.on, valueOutput.buzzer.off, valueOutput.buzzer.act);
+    ledGreen.setOnOffTime(valueOutput.led_green.onTime, valueOutput.led_green.offTime, valueOutput.led_green.targetCount, valueOutput.led_green.lastState);
+    ledRed.setOnOffTime(valueOutput.led_red.onTime, valueOutput.led_red.offTime, valueOutput.led_red.targetCount, valueOutput.led_red.lastState);
+    buzzer.setOnOffTime(valueOutput.buzzer.onTime, valueOutput.buzzer.offTime, valueOutput.buzzer.targetCount, valueOutput.buzzer.lastState);
   } else {
   }
 }

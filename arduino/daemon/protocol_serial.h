@@ -13,9 +13,10 @@ typedef struct _ValueInput {
 } ValueInput;
 
 typedef struct _TimeOnOff {
-  uint16_t on;
-  uint16_t off;
-  uint16_t act;
+  uint16_t onTime;
+  uint16_t offTime;
+  uint16_t targetCount;
+  uint16_t lastState;
 } TimeOnOff;
 
 typedef struct _ValueOutput {
@@ -31,7 +32,7 @@ typedef struct _ValueOutput {
 #define SIZE_TYPE   1
 #define SIZE_TS     4
 #define SIZE_DATA_INPUT   4
-#define SIZE_DATA_OUTPUT  18
+#define SIZE_DATA_OUTPUT  24
 #define SIZE_CRC16  4
 #define SIZE_TAIL   1
 #define SIZE_TOTAL_INPUT  (SIZE_HEAD+SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT+SIZE_CRC16+SIZE_TAIL)
@@ -47,8 +48,14 @@ typedef struct _ValueOutput {
 #define DATA_HEAD   0x02
 #define DATA_TAIL   0x03
 
+namespace FADUINO {
+  enum RELAY {
+    OFF, ON
+  };
+}
+
 enum STATE_ACT {
-  INFINITE, ONCE, TWICE, THRICE
+  INFINITE, ONCE, TWICE, THRICE, T4, T5, T6, T7, T8, T9, T10
 };
 
 enum STATE_INPUT {
