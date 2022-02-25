@@ -33,7 +33,7 @@ class Flasher {
     previousMillis = 0;
   }
 
-  void Update() {
+  void update() {
     unsigned long currentMillis = millis();
     static int fsmLastState = OUTPUT_LASTSTATE::INIT;
 

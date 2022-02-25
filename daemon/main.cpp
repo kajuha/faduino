@@ -29,9 +29,23 @@ int main(int argc, char* argv[]) {
 	// faduinod와 faduino간 연결 확인후 다음 진행할 것
 	// faduino의 ack 명령을 추가할 것
 	// sleep는 아래 명령이 빠르게 패스되어 임시로 사용
-	sleep(3);
+	sleep(1);
 
 	// PC가 정상적으로 켜졌을 경우 비프 및 LED 상태 알림
+	#if 1
+	valueOutput.led_green.onTime = 500;
+	valueOutput.led_green.offTime = 500;
+	valueOutput.led_green.targetCount = STATE_ACT::TWICE;
+	valueOutput.led_green.lastState = FADUINO::RELAY::ON;
+	valueOutput.led_red.onTime = 500;
+	valueOutput.led_red.offTime = 500;
+	valueOutput.led_red.targetCount = STATE_ACT::TWICE;
+	valueOutput.led_red.lastState = FADUINO::RELAY::ON;
+	valueOutput.buzzer.onTime = 300;
+	valueOutput.buzzer.offTime = 200;
+	valueOutput.buzzer.targetCount = STATE_ACT::THRICE;
+	valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
+	#else
 	valueOutput.led_green.onTime = 1000;
 	valueOutput.led_green.offTime = 1000;
 	valueOutput.led_green.targetCount = STATE_ACT::T10;
@@ -44,6 +58,7 @@ int main(int argc, char* argv[]) {
 	valueOutput.buzzer.offTime = 200;
 	valueOutput.buzzer.targetCount = STATE_ACT::T5;
 	valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
+	#endif
 	faduino.sendFaduinoCmd(valueOutput);
     
     printf("rosOpenCmd: %s\n", ROS_RUN);
@@ -170,7 +185,7 @@ int main(int argc, char* argv[]) {
 							valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
 							valueOutput.buzzer.onTime = 300;
 							valueOutput.buzzer.offTime = 200;
-							valueOutput.buzzer.targetCount = STATE_ACT::THRICE;
+							valueOutput.buzzer.targetCount = STATE_ACT::TWICE;
 							valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
 							faduino.sendFaduinoCmd(valueOutput);
 							printf("already run ROS\n");

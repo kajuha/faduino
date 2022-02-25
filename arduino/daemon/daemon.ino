@@ -112,9 +112,9 @@ void loop() {
   //   다. 수신 데이터(출력)에 대한 설정
   parseData();
   // 출력 처리
-  ledGreen.Update();
-  ledRed.Update();
-  buzzer.Update();
+  ledGreen.update();
+  ledRed.update();
+  buzzer.update();
 }
 
 bool parseData() {
