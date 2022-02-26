@@ -6,6 +6,8 @@
 #define BOOTUP_MSEC_PANDA 80000
 #define BOOTUP_MSEC_PC 80000
 
+#define BOOT_SW_MSEC 5000
+
 #define BAUDRATE 115200
 
 #pragma pack(push, 1)

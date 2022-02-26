@@ -53,7 +53,7 @@ void setup() {
   buzzer.setOnOffTime(500, 200, STATE_ACT::T5, FADUINO::RELAY::OFF);
 
   // pc 전원 ON
-  swPc.setOnOffTime(3000, 1000, STATE_ACT::ONCE, FADUINO::RELAY::OFF);
+  swPc.setOnOffTime(BOOT_SW_MSEC, 1000, STATE_ACT::ONCE, FADUINO::RELAY::OFF);
   ts_now = millis();
   ts_bootup_start = ts_now;
 }
@@ -132,7 +132,7 @@ void loop() {
     }
     // 부팅된 상태도 아니고 부팅
     else {
-      swPc.setOnOffTime(3000, 1000, STATE_ACT::ONCE, FADUINO::RELAY::OFF);
+      swPc.setOnOffTime(BOOT_SW_MSEC, 1000, STATE_ACT::ONCE, FADUINO::RELAY::OFF);
       ts_bootup_start = ts_now;
     }
   }
