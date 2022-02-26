@@ -32,33 +32,20 @@ int main(int argc, char* argv[]) {
 	sleep(1);
 
 	// PC가 정상적으로 켜졌을 경우 비프 및 LED 상태 알림
-	#if 1
+	// faduino 부팅시 GREEN/RED LED ON/OFF(1000,500) 무한 반복 및 비프음(500,200) 5회
+	// daemon 시작시 GREEN/RED LED ON/OFF(500,1000) 5회 및 비프음(200,500) 5회
 	valueOutput.led_green.onTime = 500;
-	valueOutput.led_green.offTime = 500;
-	valueOutput.led_green.targetCount = STATE_ACT::TWICE;
-	valueOutput.led_green.lastState = FADUINO::RELAY::ON;
-	valueOutput.led_red.onTime = 500;
-	valueOutput.led_red.offTime = 500;
-	valueOutput.led_red.targetCount = STATE_ACT::TWICE;
-	valueOutput.led_red.lastState = FADUINO::RELAY::ON;
-	valueOutput.buzzer.onTime = 300;
-	valueOutput.buzzer.offTime = 200;
-	valueOutput.buzzer.targetCount = STATE_ACT::THRICE;
-	valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
-	#else
-	valueOutput.led_green.onTime = 1000;
 	valueOutput.led_green.offTime = 1000;
-	valueOutput.led_green.targetCount = STATE_ACT::T10;
-	valueOutput.led_green.lastState = FADUINO::RELAY::ON;
-	valueOutput.led_red.onTime = 1000;
+	valueOutput.led_green.targetCount = STATE_ACT::T5;
+	valueOutput.led_green.lastState = FADUINO::RELAY::OFF;
+	valueOutput.led_red.onTime = 500;
 	valueOutput.led_red.offTime = 1000;
-	valueOutput.led_red.targetCount = STATE_ACT::T10;
-	valueOutput.led_red.lastState = FADUINO::RELAY::ON;
-	valueOutput.buzzer.onTime = 300;
-	valueOutput.buzzer.offTime = 200;
+	valueOutput.led_red.targetCount = STATE_ACT::T5;
+	valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
+	valueOutput.buzzer.onTime = 200;
+	valueOutput.buzzer.offTime = 500;
 	valueOutput.buzzer.targetCount = STATE_ACT::T5;
 	valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
-	#endif
 	faduino.sendFaduinoCmd(valueOutput);
     
     printf("rosOpenCmd: %s\n", ROS_RUN);

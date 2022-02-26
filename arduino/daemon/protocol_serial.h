@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+// 상위제어기의 부트시간
+#define BOOTUP_MSEC_PANDA 80000
+#define BOOTUP_MSEC_PC 80000
+
 #define BAUDRATE 115200
 
 #pragma pack(push, 1)
@@ -75,7 +79,7 @@ enum FSM_SERIAL {
 };
 
 enum TYPE_CMD {
-  UNKNOWN, CMD, ACK, RES, DONE
+  UNKNOWN, CMD, ACK, RES, DONE, HB
 };
 
 class CRC {
