@@ -1,7 +1,7 @@
 PORT=/dev/recipe.safety.faduino
 
 all:
-	g++ -o faduinod main.cpp serial.cpp -lboost_thread -lboost_system -Wall
+	g++ -o faduinod main.cpp serial.cpp -lboost_thread -lboost_system -lpthread -Wall
 
 run:
 ifndef USER_PORT
