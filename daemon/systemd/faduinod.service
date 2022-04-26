@@ -1,5 +1,7 @@
 [Unit]
 Description=faduinod
+StartLimitIntervalSec=100
+StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -8,6 +10,7 @@ ExecStart=/home/kajuha/catkin_ws/src/faduino/daemon/systemd/faduinod.sh
 User=root
 Group=root
 Restart=always
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
