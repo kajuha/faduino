@@ -7,21 +7,29 @@
 #define PIN_OUTPUT_BUZZER 23 // wire(white)
 #define PIN_OUTPUT_LED_GREEN 24 // wire(yellow)
 #define PIN_OUTPUT_LED_RED 25 // wire(purple)
+#define PIN_OUTPUT_LED_START 26
+#define PIN_OUTPUT_LED_STOP 27
+#define PIN_OUTPUT_REL_BREAK 28
 
-#define PIN_INPUT_ESTOP_L 30  // wire(black)
-#define PIN_INPUT_ESTOP_R 31  // wire(green)
-#define PIN_INPUT_SW_GREEN 33   // wire(gray)
-#define PIN_INPUT_SW_RED 34   // wire(brown)
+#define PIN_INPUT_ESTOP_L 30 // wire(black)
+#define PIN_INPUT_ESTOP_R 31 // wire(green)
+#define PIN_INPUT_SW_GREEN 32 // wire(gray)
+#define PIN_INPUT_SW_RED 33 // wire(brown)
+#define PIN_INPUT_SW_STOP 34 // NC(normal close) 버튼
 
 ValueInput valueInput, valueInputBefore;
 ValueOutput valueOutput, valueOutputBefore;
 
 PinButton swGreen(PIN_INPUT_SW_GREEN, INPUT);
 PinButton swRed(PIN_INPUT_SW_RED, INPUT);
+PinButton swStop(PIN_INPUT_SW_STOP, INPUT_PULLUP);
 
 Flasher buzzer(PIN_OUTPUT_BUZZER, 0, 0, INFINITE, FADUINO::RELAY::OFF);
 Flasher ledGreen(PIN_OUTPUT_LED_GREEN, 0, 0, INFINITE, FADUINO::RELAY::OFF);
 Flasher ledRed(PIN_OUTPUT_LED_RED, 0, 0, INFINITE, FADUINO::RELAY::OFF);
+Flasher ledStart(PIN_OUTPUT_LED_START, 0, 0, INFINITE, FADUINO::RELAY::OFF);
+Flasher ledStop(PIN_OUTPUT_LED_STOP, 0, 0, INFINITE, FADUINO::RELAY::OFF);
+Flasher relBreak(PIN_OUTPUT_REL_BREAK, 0, 0, INFINITE, FADUINO::RELAY::OFF);
 
 int stateEstopL;
 int stateEstopR;
@@ -36,6 +44,7 @@ void loop() {
   // 입력 처리
   swGreen.update();
   swRed.update();
+  swStop.update();
 
   if (swGreen.isDoubleClick()) {
     valueInput.sw_green = DOUBLE;
@@ -53,6 +62,14 @@ void loop() {
     valueInput.sw_red = LONG;
   } else {
     valueInput.sw_red = RELEASED;
+  }
+  
+  if (swStop.isDoubleClick()) {
+    valueInput.sw_stop = DOUBLE;
+  } else if (swStop.isLongClick()) {
+    valueInput.sw_stop = LONG;
+  } else {
+    valueInput.sw_stop = RELEASED;
   }
   
   if (digitalRead(PIN_INPUT_ESTOP_L)) {
@@ -90,7 +107,8 @@ void loop() {
   if (valueInputBefore.estop_l != valueInput.estop_l ||
       valueInputBefore.estop_r != valueInput.estop_r ||
       valueInputBefore.sw_green != valueInput.sw_green ||
-      valueInputBefore.sw_red != valueInput.sw_red) {
+      valueInputBefore.sw_red != valueInput.sw_red ||
+      valueInputBefore.sw_stop != valueInput.sw_stop) {
     valueInputBefore = valueInput;
     static char buffer[BUFSIZ];
 
@@ -98,7 +116,7 @@ void loop() {
     buffer[IDX_HEAD] = DATA_HEAD;
     buffer[IDX_TYPE] = TYPE_CMD::CMD;
     *((unsigned long*)(buffer+IDX_TS)) = micros();
-    sprintf(buffer+IDX_DATA, "%01d%01d%01d%01d", valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red);
+    sprintf(buffer+IDX_DATA, "%01d%01d%01d%01d%01d", valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red, valueInput.sw_stop);
     // crc16 계산
     unsigned short crc16in = CRC::CRC16((unsigned char*)(buffer+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
     sprintf(buffer+IDX_CRC16_INPUT, "%04x", crc16in);
@@ -115,6 +133,9 @@ void loop() {
   ledGreen.Update();
   ledRed.Update();
   buzzer.Update();
+  ledStart.Update();
+  ledStop.Update();
+  relBreak.Update();
 }
 
 bool parseData() {
@@ -237,6 +258,9 @@ void checksumData(unsigned char* packet)
     ledGreen.setOnOffTime(valueOutput.led_green.onTime, valueOutput.led_green.offTime, valueOutput.led_green.targetCount, valueOutput.led_green.lastState);
     ledRed.setOnOffTime(valueOutput.led_red.onTime, valueOutput.led_red.offTime, valueOutput.led_red.targetCount, valueOutput.led_red.lastState);
     buzzer.setOnOffTime(valueOutput.buzzer.onTime, valueOutput.buzzer.offTime, valueOutput.buzzer.targetCount, valueOutput.buzzer.lastState);
+    ledStart.setOnOffTime(valueOutput.led_start.onTime, valueOutput.led_start.offTime, valueOutput.led_start.targetCount, valueOutput.led_start.lastState);
+    ledStop.setOnOffTime(valueOutput.led_stop.onTime, valueOutput.led_stop.offTime, valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState);
+    relBreak.setOnOffTime(valueOutput.rel_break.onTime, valueOutput.rel_break.offTime, valueOutput.rel_break.targetCount, valueOutput.rel_break.lastState);
   } else {
   }
 }

@@ -10,6 +10,7 @@ typedef struct _ValueInput {
   uint16_t estop_r;
   uint16_t sw_green;
   uint16_t sw_red;
+  uint16_t sw_stop;
 } ValueInput;
 
 typedef struct _TimeOnOff {
@@ -23,6 +24,9 @@ typedef struct _ValueOutput {
   TimeOnOff led_green;
   TimeOnOff led_red;
   TimeOnOff buzzer;
+  TimeOnOff led_start;
+  TimeOnOff led_stop;
+  TimeOnOff rel_break;
 } ValueOutput;
 #pragma pack(pop)
 
@@ -31,8 +35,8 @@ typedef struct _ValueOutput {
 #define SIZE_HEAD   1
 #define SIZE_TYPE   1
 #define SIZE_TS     4
-#define SIZE_DATA_INPUT   4
-#define SIZE_DATA_OUTPUT  24
+#define SIZE_DATA_INPUT   5
+#define SIZE_DATA_OUTPUT  48
 #define SIZE_CRC16  4
 #define SIZE_TAIL   1
 #define SIZE_TOTAL_INPUT  (SIZE_HEAD+SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT+SIZE_CRC16+SIZE_TAIL)

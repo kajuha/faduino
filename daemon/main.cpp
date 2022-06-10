@@ -44,6 +44,18 @@ int main(int argc, char* argv[]) {
 	valueOutput.buzzer.offTime = 200;
 	valueOutput.buzzer.targetCount = STATE_ACT::T5;
 	valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
+	valueOutput.led_start.onTime = 1000;
+	valueOutput.led_start.offTime = 1000;
+	valueOutput.led_start.targetCount = STATE_ACT::T10;
+	valueOutput.led_start.lastState = FADUINO::RELAY::ON;
+	valueOutput.led_stop.onTime = 1000;
+	valueOutput.led_stop.offTime = 1000;
+	valueOutput.led_stop.targetCount = STATE_ACT::T10;
+	valueOutput.led_stop.lastState = FADUINO::RELAY::ON;
+	valueOutput.rel_break.onTime = 0;
+	valueOutput.rel_break.offTime = 0;
+	valueOutput.rel_break.targetCount = STATE_ACT::INFINITE;
+	valueOutput.rel_break.lastState = FADUINO::RELAY::OFF;
 	faduino.sendFaduinoCmd(valueOutput);
     
     printf("rosOpenCmd: %s\n", ROS_RUN);
@@ -61,16 +73,15 @@ int main(int argc, char* argv[]) {
 			valueInput = faduino.queFaduinoState.front();
 			faduino.queFaduinoState.pop();
 
-			printf("valueInput   : %1d %1d %1d %1d\nvalueInputPre: %1d %1d %1d %1d\n",
-				valueInput.estop_l, valueInput.estop_r,
-				valueInput.sw_green, valueInput.sw_red,
-				valueInputPre.estop_l, valueInputPre.estop_r,
-				valueInputPre.sw_green, valueInputPre.sw_red);
+			printf("valueInput   : %1d %1d %1d %1d %1d\nvalueInputPre: %1d %1d %1d %1d %1d\n",
+				valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red, valueInput.sw_stop,
+				valueInputPre.estop_l, valueInputPre.estop_r, valueInputPre.sw_green, valueInputPre.sw_red, valueInputPre.sw_stop);
 			
 			if (valueInputPre.estop_l != valueInput.estop_l ||
 				valueInputPre.estop_r != valueInput.estop_r ||
 				valueInputPre.sw_green != valueInput.sw_green ||
-				valueInputPre.sw_red != valueInput.sw_red) {
+				valueInputPre.sw_red != valueInput.sw_red ||
+				valueInputPre.sw_stop != valueInput.sw_stop) {
 				valueInputPre = valueInput;
 
 				switch (valueInput.estop_l) {

@@ -243,9 +243,8 @@ void Faduino::checksumFaduinoState(unsigned char* packet) {
 	unsigned short crc16 = CRC::CRC16((unsigned char*)(packet+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
 
 	if (crc16out == crc16) {
-		sscanf((const char*)(packet+IDX_DATA), "%01hd%01hd%01hd%01hd",
-			&valueInput.estop_l, &valueInput.estop_r,
-			&valueInput.sw_green, &valueInput.sw_red);
+		sscanf((const char*)(packet+IDX_DATA), "%01hd%01hd%01hd%01hd%01hd",
+			&valueInput.estop_l, &valueInput.estop_r, &valueInput.sw_green, &valueInput.sw_red, &valueInput.sw_stop);
 
 		queFaduinoState.push(valueInput);
 
@@ -291,8 +290,8 @@ void Faduino::checksumFaduinoState(unsigned char* packet) {
 		#if 1
 		printf("type:%d, ts:%d, ",
 			packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
-		printf("estop_l:%d, estop_r:%d, sw_green:%d, sw_red:%d\n",
-			valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red);
+		printf("estop_l:%d, estop_r:%d, sw_green:%d, sw_red:%d, sw_stop:%d\n",
+			valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red, valueInput.sw_stop);
 		#endif
 	} else {
 		printf("crc16 not matched !!!\n");
