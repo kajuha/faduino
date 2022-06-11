@@ -243,56 +243,73 @@ void Faduino::checksumFaduinoState(unsigned char* packet) {
 	unsigned short crc16 = CRC::CRC16((unsigned char*)(packet+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
 
 	if (crc16out == crc16) {
-		sscanf((const char*)(packet+IDX_DATA), "%01hd%01hd%01hd%01hd%01hd",
-			&valueInput.estop_l, &valueInput.estop_r, &valueInput.sw_green, &valueInput.sw_red, &valueInput.sw_stop);
+		switch (packet[IDX_TYPE]) {
+			case TYPE_CMD::CMD:
+				sscanf((const char*)(packet+IDX_DATA), "%01hd%01hd%01hd%01hd%01hd",
+					&valueInput.estop_l, &valueInput.estop_r, &valueInput.sw_green, &valueInput.sw_red, &valueInput.sw_stop);
 
-		queFaduinoState.push(valueInput);
+				queFaduinoState.push(valueInput);
 
-		#if 0
-		printf("type:%d, ts:%d\n",
-			packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
-		switch (valueInput.estop_l) {
-			case PUSHED:
-			case RELEASED:
-			case DOUBLE:
-			case LONG:
-			default:
-				break;
-		}
-		switch (valueInput.estop_r) {
-			case PUSHED:
-			case RELEASED:
-			case DOUBLE:
-			case LONG:
-			default:
-				break;
-		}
-		switch (valueInput.sw_green) {
-			case PUSHED:
-			case RELEASED:
-			case DOUBLE:
-			case LONG:
-				break;
-			default:
-				break;
-		}
-		switch (valueInput.sw_red) {
-			case PUSHED:
-			case RELEASED:
-			case DOUBLE:
-			case LONG:
-				break;
-			default:
-				break;
-		}
-		#endif
+				#if 0
+				printf("type:%d, ts:%d\n",
+					packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
+				switch (valueInput.estop_l) {
+					case PUSHED:
+					case RELEASED:
+					case DOUBLE:
+					case LONG:
+					default:
+						break;
+				}
+				switch (valueInput.estop_r) {
+					case PUSHED:
+					case RELEASED:
+					case DOUBLE:
+					case LONG:
+					default:
+						break;
+				}
+				switch (valueInput.sw_green) {
+					case PUSHED:
+					case RELEASED:
+					case DOUBLE:
+					case LONG:
+						break;
+					default:
+						break;
+				}
+				switch (valueInput.sw_red) {
+					case PUSHED:
+					case RELEASED:
+					case DOUBLE:
+					case LONG:
+						break;
+					default:
+						break;
+				}
+				#endif
 
-		#if 1
-		printf("type:%d, ts:%d, ",
-			packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
-		printf("estop_l:%d, estop_r:%d, sw_green:%d, sw_red:%d, sw_stop:%d\n",
-			valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red, valueInput.sw_stop);
-		#endif
+				#if 1
+				printf("type:%d, ts:%d, ",
+					packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
+				printf("estop_l:%d, estop_r:%d, sw_green:%d, sw_red:%d, sw_stop:%d\n",
+					valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red, valueInput.sw_stop);
+				#endif
+				break;
+			case TYPE_CMD::SENSOR:
+				static int sensorValue;
+				sscanf((const char*)(packet+IDX_DATA), "%05d", &sensorValue);
+
+				#if 1
+				printf("type:%d, ts:%d, ", packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
+				printf("sensorValue:%d\n", sensorValue);
+				#endif
+				break;
+			default:
+				printf("unknown type:%d, ts:%d\n",
+					packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
+				break;
+		}
 	} else {
 		printf("crc16 not matched !!!\n");
 	}

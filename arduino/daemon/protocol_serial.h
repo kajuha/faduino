@@ -18,6 +18,7 @@ typedef struct _TimeOnOff {
   uint16_t offTime;
   uint16_t targetCount;
   uint16_t lastState;
+  uint16_t update;
 } TimeOnOff;
 
 typedef struct _ValueOutput {
@@ -36,7 +37,7 @@ typedef struct _ValueOutput {
 #define SIZE_TYPE   1
 #define SIZE_TS     4
 #define SIZE_DATA_INPUT   5
-#define SIZE_DATA_OUTPUT  48
+#define SIZE_DATA_OUTPUT  60
 #define SIZE_CRC16  4
 #define SIZE_TAIL   1
 #define SIZE_TOTAL_INPUT  (SIZE_HEAD+SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT+SIZE_CRC16+SIZE_TAIL)
@@ -79,7 +80,7 @@ enum FSM_SERIAL {
 };
 
 enum TYPE_CMD {
-  UNKNOWN, CMD, ACK, RES, DONE
+  UNKNOWN, CMD, ACK, RES, DONE, SENSOR
 };
 
 class CRC {

@@ -17,6 +17,12 @@
 #define PIN_INPUT_SW_RED 33 // wire(brown)
 #define PIN_INPUT_SW_STOP 34 // NC(normal close) 버튼
 
+#define PIN_INPUT_CURRENT A4
+
+#define CURRENT_VOLTAGE 5.0
+#define MAX_VOLTAGE 10.0
+#define MAX_STEP 1024.0
+
 ValueInput valueInput, valueInputBefore;
 ValueOutput valueOutput, valueOutputBefore;
 
@@ -34,10 +40,17 @@ Flasher relBreak(PIN_OUTPUT_REL_BREAK, 0, 0, INFINITE, FADUINO::RELAY::OFF);
 int stateEstopL;
 int stateEstopR;
 
+int currentValue;
+static char buffer[BUFSIZ];
+
+unsigned long us_now, us_pre;
+
 void setup() {
   Serial.begin(BAUDRATE);
   pinMode(PIN_INPUT_ESTOP_L, INPUT);
   pinMode(PIN_INPUT_ESTOP_R, INPUT);
+
+  us_now = us_pre = millis();
 }
 
 void loop() {
@@ -45,6 +58,7 @@ void loop() {
   swGreen.update();
   swRed.update();
   swStop.update();
+  currentValue = analogRead(PIN_INPUT_CURRENT);
 
   if (swGreen.isDoubleClick()) {
     valueInput.sw_green = DOUBLE;
@@ -110,13 +124,31 @@ void loop() {
       valueInputBefore.sw_red != valueInput.sw_red ||
       valueInputBefore.sw_stop != valueInput.sw_stop) {
     valueInputBefore = valueInput;
-    static char buffer[BUFSIZ];
 
     // 송신 포맷 생성
     buffer[IDX_HEAD] = DATA_HEAD;
     buffer[IDX_TYPE] = TYPE_CMD::CMD;
     *((unsigned long*)(buffer+IDX_TS)) = micros();
     sprintf(buffer+IDX_DATA, "%01d%01d%01d%01d%01d", valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red, valueInput.sw_stop);
+    // crc16 계산
+    unsigned short crc16in = CRC::CRC16((unsigned char*)(buffer+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
+    sprintf(buffer+IDX_CRC16_INPUT, "%04x", crc16in);
+    buffer[IDX_TAIL_INPUT] = DATA_TAIL;
+
+    Serial.write(buffer, SIZE_TOTAL_INPUT);
+  }
+
+  // 주기마다 아날로그 데이터 송신
+  us_now = micros();
+  #define SEND_RATE_US  1000000
+  if ((us_now - us_pre) > SEND_RATE_US) {
+    us_pre = us_now;
+
+    // 송신 포맷 생성
+    buffer[IDX_HEAD] = DATA_HEAD;
+    buffer[IDX_TYPE] = TYPE_CMD::SENSOR;
+    *((unsigned long*)(buffer+IDX_TS)) = micros();
+    sprintf(buffer+IDX_DATA, "%05d", currentValue);
     // crc16 계산
     unsigned short crc16in = CRC::CRC16((unsigned char*)(buffer+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
     sprintf(buffer+IDX_CRC16_INPUT, "%04x", crc16in);
@@ -255,12 +287,12 @@ void checksumData(unsigned char* packet)
 
   if (crc16out == crc16) {
     memcpy(&valueOutput, packet+IDX_DATA, SIZE_DATA_OUTPUT);
-    ledGreen.setOnOffTime(valueOutput.led_green.onTime, valueOutput.led_green.offTime, valueOutput.led_green.targetCount, valueOutput.led_green.lastState);
-    ledRed.setOnOffTime(valueOutput.led_red.onTime, valueOutput.led_red.offTime, valueOutput.led_red.targetCount, valueOutput.led_red.lastState);
-    buzzer.setOnOffTime(valueOutput.buzzer.onTime, valueOutput.buzzer.offTime, valueOutput.buzzer.targetCount, valueOutput.buzzer.lastState);
-    ledStart.setOnOffTime(valueOutput.led_start.onTime, valueOutput.led_start.offTime, valueOutput.led_start.targetCount, valueOutput.led_start.lastState);
-    ledStop.setOnOffTime(valueOutput.led_stop.onTime, valueOutput.led_stop.offTime, valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState);
-    relBreak.setOnOffTime(valueOutput.rel_break.onTime, valueOutput.rel_break.offTime, valueOutput.rel_break.targetCount, valueOutput.rel_break.lastState);
+    if (valueOutput.led_green.update) ledGreen.setOnOffTime(valueOutput.led_green.onTime, valueOutput.led_green.offTime, valueOutput.led_green.targetCount, valueOutput.led_green.lastState);
+    if (valueOutput.led_red.update) ledRed.setOnOffTime(valueOutput.led_red.onTime, valueOutput.led_red.offTime, valueOutput.led_red.targetCount, valueOutput.led_red.lastState);
+    if (valueOutput.buzzer.update) buzzer.setOnOffTime(valueOutput.buzzer.onTime, valueOutput.buzzer.offTime, valueOutput.buzzer.targetCount, valueOutput.buzzer.lastState);
+    if (valueOutput.led_start.update) ledStart.setOnOffTime(valueOutput.led_start.onTime, valueOutput.led_start.offTime, valueOutput.led_start.targetCount, valueOutput.led_start.lastState);
+    if (valueOutput.led_stop.update) ledStop.setOnOffTime(valueOutput.led_stop.onTime, valueOutput.led_stop.offTime, valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState);
+    if (valueOutput.rel_break.update) relBreak.setOnOffTime(valueOutput.rel_break.onTime, valueOutput.rel_break.offTime, valueOutput.rel_break.targetCount, valueOutput.rel_break.lastState);
   } else {
   }
 }
