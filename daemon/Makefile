@@ -1,15 +1,16 @@
-PORT=/dev/recipe.safety.faduino
+SERIAL_PORT=/dev/recipe.safety.faduino
+TCP_PORT=20212
 
 all:
 	g++ -o faduinod main.cpp serial.cpp -lboost_thread -lboost_system -lpthread -Wall
 
 run:
-ifndef USER_PORT
-	@echo ${PORT}
-	/home/kajuha/catkin_ws/src/faduino/daemon/faduinod ${PORT}
+ifndef USER_SERIAL_PORT
+	@echo ${SERIAL_PORT}
+	/home/kajuha/catkin_ws/src/faduino/daemon/faduinod ${SERIAL_PORT} ${TCP_PORT}
 else
-	@echo ${USER_PORT}
-	/home/kajuha/catkin_ws/src/faduino/daemon/faduinod ${USER_PORT}
+	@echo ${USER_SERIAL_PORT}
+	/home/kajuha/catkin_ws/src/faduino/daemon/faduinod ${USER_SERIAL_PORT} ${TCP_PORT}
 endif
 
 install:

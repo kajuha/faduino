@@ -18,6 +18,7 @@ public:
 	unsigned char serialBufferRx[BUFSIZ];
 	unsigned char serialBufferTx[BUFSIZ];
 	
+	Faduino();
 	Faduino(std::string serialPort, int baudrate);
 
 	bool initSerial();

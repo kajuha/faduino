@@ -18,20 +18,33 @@
 
 ValueInput valueInput;
 
-Faduino::Faduino(std::string serialPort, int baudrate) {		
+#define SERIAL_EN 1
+
+Faduino::Faduino() {
+}
+
+Faduino::Faduino(std::string serialPort, int baudrate) {
 	this->serialPort = serialPort;
 	this->baudrate = baudrate;
+
+	#if SERIAL_EN
+	#else
+	#endif
 }
 
 bool Faduino::initSerial()	{
+	#if SERIAL_EN
 	const char* COMM_PORT = serialPort.c_str();
 
 	if(-1 == (fd = open(COMM_PORT, O_RDWR))) {
 		printf("error opening port\n");
-		printf("set port parameters using the following Linux command:\n stty -F %s %d raw\n", COMM_PORT, baudrate);
-		printf("you may need to have ROOT access");
+		printf("set port parameters using the following Linux command:\n");
+		printf("stty -F %s %d raw\n", COMM_PORT, baudrate);
+		printf("you may need to have ROOT access\n");
 		return false;
 	}
+	#else
+	#endif
 
 	struct termios newtio;
 	memset(&newtio, 0, sizeof(newtio));
@@ -87,17 +100,25 @@ bool Faduino::initSerial()	{
 	newtio.c_cc[VMIN] = 0;
 	#endif
 
+	#if SERIAL_EN
 	tcflush(fd, TCIOFLUSH);
 	tcsetattr(fd, TCSANOW, &newtio);
 
 	printf("faduino communication port is ready\n");
+	#else
+	printf("SERIAL DUMMY port is ready\n");
+	#endif
 
 	return true;
 }
 
 void Faduino::closeSerial() {
+	#if SERIAL_EN
 	close(fd);
 	printf("closing faduino\n");
+	#else
+	printf("closing SERIAL DUMMY\n");
+	#endif
 }
 
 bool Faduino::sendFaduinoCmd(ValueOutput valueOutput) {
@@ -116,7 +137,42 @@ bool Faduino::sendFaduinoCmd(ValueOutput valueOutput) {
 	sprintf((char*)(serialBufferTx+IDX_CRC16_OUTPUT), "%04x", crc16in);
 	serialBufferTx[IDX_TAIL_OUTPUT] = DATA_TAIL;
 
+	#if SERIAL_EN
 	write(fd, serialBufferTx, SIZE_TOTAL_OUTPUT);
+	#else
+	printf("SEND SERIAL DUMMY\n");
+	#if 0
+	for (int i=0; i<SIZE_DATA_OUTPUT; i++) {
+		printf("[%02x]", serialBufferTx[i]);
+	}
+	printf("\n");
+	#endif
+	printf("TS(us): %d\n", *((uint32_t*)(serialBufferTx+IDX_TS)));
+	printf("led_green(on: %5d off: %5d count: %2d last: %1d update: %1d)\n",
+		valueOutput.led_green.onTime, valueOutput.led_green.offTime,
+		valueOutput.led_green.targetCount, valueOutput.led_green.lastState,
+		valueOutput.led_green.update);
+	printf("led_red  (on: %5d off: %5d count: %2d last: %1d update: %1d)\n",
+		valueOutput.led_red.onTime, valueOutput.led_red.offTime,
+		valueOutput.led_red.targetCount, valueOutput.led_red.lastState,
+		valueOutput.led_red.update);
+	printf("buzzer   (on: %5d off: %5d count: %2d last: %1d update: %1d)\n",
+		valueOutput.buzzer.onTime, valueOutput.buzzer.offTime,
+		valueOutput.buzzer.targetCount, valueOutput.buzzer.lastState,
+		valueOutput.buzzer.update);
+	printf("led_start(on: %5d off: %5d count: %2d last: %1d update: %1d)\n",
+		valueOutput.led_start.onTime, valueOutput.led_start.offTime,
+		valueOutput.led_start.targetCount, valueOutput.led_start.lastState,
+		valueOutput.led_start.update);
+	printf("led_stop (on: %5d off: %5d count: %2d last: %1d update: %1d)\n",
+		valueOutput.led_stop.onTime, valueOutput.led_stop.offTime,
+		valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState,
+		valueOutput.led_stop.update);
+	printf("rel_break(on: %5d off: %5d count: %2d last: %1d update: %1d)\n",
+		valueOutput.rel_break.onTime, valueOutput.rel_break.offTime,
+		valueOutput.rel_break.targetCount, valueOutput.rel_break.lastState,
+		valueOutput.rel_break.update);
+	#endif
 
 	return true;
 }
@@ -126,7 +182,11 @@ bool Faduino::receiveFaduinoState(bool enableParsing) {
 
 	memset(serialBufferRx, '\0', sizeof(serialBufferRx));
 
+	#if SERIAL_EN
 	rx_size = read(fd, serialBufferRx, BUFSIZ);
+	#else
+	rx_size = 0;
+	#endif
 
 	for (int i=0; i<rx_size; i++) {
 		queSerialRx.push(serialBufferRx[i]);
@@ -148,85 +208,85 @@ bool Faduino::receiveFaduinoState(bool enableParsing) {
 }
 
 bool Faduino::parseFaduinoState() {
-	static int state = FSM_SERIAL::HEAD;
+	static int state = FSM_FADUINO::HEAD;
 	static unsigned char packet[SIZE_TOTAL_INPUT] = {'\0', };
 
 	switch (state) {
-		case FSM_SERIAL::HEAD:
+		case FSM_FADUINO::HEAD:
 			if (queSerialRx.size() >= SIZE_HEAD) {
 				packet[IDX_HEAD] = queSerialRx.front();
 				if (packet[IDX_HEAD] == DATA_HEAD) {
-					state = FSM_SERIAL::TYPE;
+					state = FSM_FADUINO::TYPE;
 				} else {
-					printf("FSM_SERIAL::HEAD not Match \n");
-					state = FSM_SERIAL::HEAD;
+					printf("FSM_FADUINO::HEAD not Match \n");
+					state = FSM_FADUINO::HEAD;
 				}
 				queSerialRx.pop();
 			}
 			break;
-		case FSM_SERIAL::TYPE:
+		case FSM_FADUINO::TYPE:
 			if (queSerialRx.size() >= SIZE_TYPE) {
 				packet[IDX_TYPE] = queSerialRx.front();
-				state = FSM_SERIAL::TS;
+				state = FSM_FADUINO::TS;
 				queSerialRx.pop();
 			}
 			break;
-		case FSM_SERIAL::TS:
+		case FSM_FADUINO::TS:
 			if (queSerialRx.size() >= SIZE_TS) {
 				for (int i=0; i<SIZE_TS; i++) {
 					packet[IDX_TS+i] = queSerialRx.front();
 					queSerialRx.pop();
 				}
 
-				state = FSM_SERIAL::DATA;
+				state = FSM_FADUINO::DATA;
 			}
 			break;
-		case FSM_SERIAL::DATA:
+		case FSM_FADUINO::DATA:
 			if (queSerialRx.size() >= SIZE_DATA_INPUT) {
 				for (int i=0; i<SIZE_DATA_INPUT; i++) {
 					packet[IDX_DATA+i] = queSerialRx.front();
 					queSerialRx.pop();
 				}
 
-				state = FSM_SERIAL::CRC16;
+				state = FSM_FADUINO::CRC16;
 			}
 			break;
-		case FSM_SERIAL::CRC16:
+		case FSM_FADUINO::CRC16:
 			if (queSerialRx.size() >= SIZE_CRC16) {
 				for (int i=0; i<SIZE_CRC16; i++) {
 					packet[IDX_CRC16_INPUT+i] = queSerialRx.front();
 					queSerialRx.pop();
 				}
 
-				state = FSM_SERIAL::TAIL;
+				state = FSM_FADUINO::TAIL;
 			}
 			break;
-		case FSM_SERIAL::TAIL:
+		case FSM_FADUINO::TAIL:
 			if (queSerialRx.size() >= SIZE_TAIL) {
 				packet[IDX_TAIL_INPUT] = queSerialRx.front();
 				if (packet[IDX_TAIL_INPUT] == DATA_TAIL) {
-					state = FSM_SERIAL::OK;
+					state = FSM_FADUINO::OK;
 				} else {
-					printf("FSM_SERIAL::TAIL not Match\n");
+					printf("FSM_FADUINO::TAIL not Match\n");
 					for (int i=0; i<SIZE_TOTAL_INPUT; i++) {
 						printf("[%02x]", packet[i]);
 					}
 					printf("\n");
-					state = FSM_SERIAL::HEAD;
+					state = FSM_FADUINO::HEAD;
 				}
 				queSerialRx.pop();
 			}
 			break;
-		case FSM_SERIAL::OK:
+		case FSM_FADUINO::OK:
 			checksumFaduinoState(packet);
 
 			memset(packet, '\0', SIZE_TOTAL_INPUT);
 			
-			state = FSM_SERIAL::HEAD;
+			state = FSM_FADUINO::HEAD;
 
 			break;
 		default:
-			state = FSM_SERIAL::HEAD;
+			state = FSM_FADUINO::HEAD;
 
 			break;
 	}

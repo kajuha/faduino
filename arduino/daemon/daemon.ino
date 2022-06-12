@@ -223,11 +223,11 @@ void loop() {
 }
 
 bool parseData() {
-  static int state = FSM_SERIAL::HEAD;
+  static int state = FSM_FADUINO::HEAD;
   static unsigned char packet[SIZE_TOTAL_OUTPUT] = {'\0', };
 
   switch (state) {
-    case FSM_SERIAL::HEAD:
+    case FSM_FADUINO::HEAD:
       if (Serial.available() >= SIZE_HEAD) {
         #if 1
         Serial.readBytes(packet+IDX_HEAD, SIZE_HEAD);
@@ -236,13 +236,13 @@ bool parseData() {
         que.pop();
         #endif
         if (packet[IDX_HEAD] == DATA_HEAD) {
-          state = FSM_SERIAL::TYPE;
+          state = FSM_FADUINO::TYPE;
         } else {
-          state = FSM_SERIAL::HEAD;
+          state = FSM_FADUINO::HEAD;
         }
       }
       break;
-    case FSM_SERIAL::TYPE:
+    case FSM_FADUINO::TYPE:
       if (Serial.available() >= SIZE_TYPE) {
         #if 1
         Serial.readBytes(packet+IDX_TYPE, SIZE_TYPE);
@@ -251,10 +251,10 @@ bool parseData() {
         que.pop();
         #endif
         
-        state = FSM_SERIAL::TS;
+        state = FSM_FADUINO::TS;
       }
       break;
-    case FSM_SERIAL::TS:
+    case FSM_FADUINO::TS:
       if (Serial.available() >= SIZE_TS) {
         #if 1
         Serial.readBytes(packet+IDX_TS, SIZE_TS);
@@ -265,10 +265,10 @@ bool parseData() {
         }
         #endif
 
-        state = FSM_SERIAL::DATA;
+        state = FSM_FADUINO::DATA;
       }
       break;
-    case FSM_SERIAL::DATA:
+    case FSM_FADUINO::DATA:
       if (Serial.available() >= SIZE_DATA_OUTPUT) {
         #if 1
         Serial.readBytes(packet+IDX_DATA, SIZE_DATA_OUTPUT);
@@ -279,10 +279,10 @@ bool parseData() {
         }
         #endif
 
-        state = FSM_SERIAL::CRC16;
+        state = FSM_FADUINO::CRC16;
       }
       break;
-    case FSM_SERIAL::CRC16:
+    case FSM_FADUINO::CRC16:
       if (Serial.available() >= SIZE_CRC16) {
         #if 1
         Serial.readBytes(packet+IDX_CRC16_OUTPUT, SIZE_CRC16);
@@ -293,10 +293,10 @@ bool parseData() {
         }
         #endif
 
-        state = FSM_SERIAL::TAIL;
+        state = FSM_FADUINO::TAIL;
       }
       break;
-    case FSM_SERIAL::TAIL:
+    case FSM_FADUINO::TAIL:
       if (Serial.available() >= SIZE_TAIL) {
         #if 1
         Serial.readBytes(packet+IDX_TAIL_OUTPUT, SIZE_TAIL);
@@ -305,22 +305,22 @@ bool parseData() {
         que.pop();
         #endif
         if (packet[IDX_TAIL_OUTPUT] == DATA_TAIL) {
-          state = FSM_SERIAL::OK;
+          state = FSM_FADUINO::OK;
         } else {
-          state = FSM_SERIAL::HEAD;
+          state = FSM_FADUINO::HEAD;
         }
       }
       break;
-    case FSM_SERIAL::OK:
+    case FSM_FADUINO::OK:
       checksumData(packet);
 
       memset(packet, '\0', SIZE_TOTAL_OUTPUT);
       
-      state = FSM_SERIAL::HEAD;
+      state = FSM_FADUINO::HEAD;
 
       break;
     default:
-      state = FSM_SERIAL::HEAD;
+      state = FSM_FADUINO::HEAD;
 
       break;
   }
