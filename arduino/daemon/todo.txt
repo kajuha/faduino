@@ -1,0 +1,5 @@
+1. long 클릭으로 PC ON/OFF
+  가. PC ON시 PC 부팅되는 시간 측정하여 그 시간내에 다시 long 클릭을 하더라도 동작하지 않도록 처리
+  나. PC 부팅된 후에 long 클릭을 할 경우 동작하지 않도록 PC daemon에서 ack 메시지를 주기적으로 송신처리
+
+2. Flasher.h 의 laststate가 정상적으로 동작하지 않음

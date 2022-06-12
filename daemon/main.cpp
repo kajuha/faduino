@@ -29,19 +29,21 @@ int main(int argc, char* argv[]) {
 	// faduinod와 faduino간 연결 확인후 다음 진행할 것
 	// faduino의 ack 명령을 추가할 것
 	// sleep는 아래 명령이 빠르게 패스되어 임시로 사용
-	sleep(3);
+	sleep(1);
 
 	// PC가 정상적으로 켜졌을 경우 비프 및 LED 상태 알림
-	valueOutput.led_green.onTime = 1000;
+	// faduino 부팅시 GREEN/RED LED ON/OFF(1000,500) 무한 반복 및 비프음(500,200) 5회
+	// daemon 시작시 GREEN/RED LED ON/OFF(500,1000) 5회 및 비프음(200,500) 5회
+	valueOutput.led_green.onTime = 500;
 	valueOutput.led_green.offTime = 1000;
-	valueOutput.led_green.targetCount = STATE_ACT::T10;
-	valueOutput.led_green.lastState = FADUINO::RELAY::ON;
-	valueOutput.led_red.onTime = 1000;
+	valueOutput.led_green.targetCount = STATE_ACT::T5;
+	valueOutput.led_green.lastState = FADUINO::RELAY::OFF;
+	valueOutput.led_red.onTime = 500;
 	valueOutput.led_red.offTime = 1000;
-	valueOutput.led_red.targetCount = STATE_ACT::T10;
-	valueOutput.led_red.lastState = FADUINO::RELAY::ON;
-	valueOutput.buzzer.onTime = 300;
-	valueOutput.buzzer.offTime = 200;
+	valueOutput.led_red.targetCount = STATE_ACT::T5;
+	valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
+	valueOutput.buzzer.onTime = 200;
+	valueOutput.buzzer.offTime = 500;
 	valueOutput.buzzer.targetCount = STATE_ACT::T5;
 	valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
 	valueOutput.led_start.onTime = 1000;
@@ -205,7 +207,7 @@ int main(int argc, char* argv[]) {
 							valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
 							valueOutput.buzzer.onTime = 300;
 							valueOutput.buzzer.offTime = 200;
-							valueOutput.buzzer.targetCount = STATE_ACT::THRICE;
+							valueOutput.buzzer.targetCount = STATE_ACT::TWICE;
 							valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
 							valueOutput.led_green.update = 1;
 							valueOutput.led_red.update = 1;
