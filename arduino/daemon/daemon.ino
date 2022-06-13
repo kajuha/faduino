@@ -192,6 +192,10 @@ void loop() {
   // 주기마다 아날로그 데이터 송신
   us_now = micros();
   #define SEND_RATE_US  1000000
+  // FADUINO에서 프로그래밍(펌웨어 다운로드) 포트로
+  // 일반 송수신 통신을 할 경우 에러가 발생함
+  // 일반 송수신은 다른 포트를 이용할 것
+  #if 0
   if ((us_now - us_pre) > SEND_RATE_US) {
     us_pre = us_now;
 
@@ -207,6 +211,7 @@ void loop() {
 
     Serial.write(buffer, SIZE_TOTAL_INPUT);
   }
+  #endif
   // 수신 데이터 처리
   //   가. 송신 데이터에 대한 ACK
   //   나. 수신 데이터(출력)에 대한 현재 상태 요청에 대한 응답

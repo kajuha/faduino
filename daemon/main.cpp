@@ -366,7 +366,10 @@ int main(int argc, char* argv[]) {
     }
     printf("argument(host port) is set :[%d].\n", hostPort);
 
+#define THREAD_TCP_EN 1
+	#if THREAD_TCP_EN
     boost::thread threadTcp(fThread, &hostPort, &isSerial);
+	#endif
 
 	std::string serialPort = argv[ARG_SERIAL_PORT];
 	int baudrate = BAUDRATE;
@@ -718,9 +721,11 @@ int main(int argc, char* argv[]) {
 
 	faduino.closeSerial();
 
+	#if THREAD_TCP_EN
     printf("[c] threadTcp join\n");
     threadTcp.join();
     printf("[c] threadTcp joined\n");
+	#endif
 
 	return 0;
 }
