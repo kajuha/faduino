@@ -1,0 +1,10 @@
+<launch>
+    <arg name="message_display" default="screen" doc="output type"/>
+    <arg name="main_hz" default="1000" doc="main loop herz"/>
+    <arg name="tcp_port" default="20212" doc="tcp port"/>
+    
+    <node pkg="faduino" type="faduino" name="faduino" output="$(arg message_display)">
+        <param name="main_hz" value="$(arg main_hz)"/>
+        <param name="tcp_port" value="$(arg tcp_port)"/>
+    </node>
+</launch>
