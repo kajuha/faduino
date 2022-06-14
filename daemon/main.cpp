@@ -11,8 +11,8 @@
 #include "exec.h"
 
 #define ARG_SERIAL_PORT 1
-#define ARG_HOST_PORT 2
-#define ARG_MAX (ARG_HOST_PORT+1)
+#define ARG_TCP_PORT 2
+#define ARG_MAX (ARG_TCP_PORT+1)
 
 Faduino faduino;
 
@@ -188,7 +188,7 @@ bool parseTcpState() {
 	return false;
 }
 
-void fThread(int* hostPort, bool* isSerial) {
+void fThread(int* tcpPort, bool* isSerial) {
 	while (!*isSerial);
 
     // TCP 통신 관련 변수
@@ -215,8 +215,8 @@ void fThread(int* hostPort, bool* isSerial) {
         addr.sin_family = AF_INET;
         addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-        printf("[s] hostPort: %d \n", *hostPort);
-        addr.sin_port = htons(*hostPort);
+        printf("[s] tcpPort: %d \n", *tcpPort);
+        addr.sin_port = htons(*tcpPort);
 
         // time_wait 제거하기
         int option = 1;
@@ -338,12 +338,10 @@ void fThread(int* hostPort, bool* isSerial) {
         // 해당 포트가 이미 사용중이라는 표시가 나타날 수 있음
         usleep(500000);
     }
-
-    printf("[s] program end\n");
 }
 
 int main(int argc, char* argv[]) {
-    int hostPort;
+    int tcpPort;
 	bool isSerial = false;
 
     if (argc != ARG_MAX) {
@@ -358,17 +356,17 @@ int main(int argc, char* argv[]) {
     // argument(host port)
     char* p;
     errno = 0;
-    hostPort = strtol(argv[ARG_HOST_PORT], &p, 10);
+    tcpPort = strtol(argv[ARG_TCP_PORT], &p, 10);
     if (*p != '\0' || errno != 0) {
         printf("argument(host port) parsing error.\n");
 
         return -1;
     }
-    printf("argument(host port) is set :[%d].\n", hostPort);
+    printf("argument(host port) is set :[%d].\n", tcpPort);
 
 #define THREAD_TCP_EN 1
 	#if THREAD_TCP_EN
-    boost::thread threadTcp(fThread, &hostPort, &isSerial);
+    boost::thread threadTcp(fThread, &tcpPort, &isSerial);
 	#endif
 
 	std::string serialPort = argv[ARG_SERIAL_PORT];
@@ -426,8 +424,8 @@ int main(int argc, char* argv[]) {
 	valueOutput.led_green.update = 1;
 	valueOutput.led_red.update = 1;
 	valueOutput.buzzer.update = 1;
-	valueOutput.led_start.update = 1;
-	valueOutput.led_stop.update = 1;
+	valueOutput.led_start.update = 0;
+	valueOutput.led_stop.update = 0;
 	valueOutput.rel_break.update = 0;
 	faduino.sendFaduinoCmd(valueOutput);
     
