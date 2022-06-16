@@ -111,7 +111,7 @@ void fThread(std::string host_name, int tcp_port) {
         setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 
         // 시그널 핸들러 등록
-        signal(SIGINT, sigint_handler);
+        // signal(SIGINT, sigint_handler);
 
         // 시그널 핸들러 등록
         readWriteInfinite = 1;
@@ -271,6 +271,10 @@ int main(int argc, char* argv[]) {
     }
 
     printf("[c] threadTcp join\n");
+    close(server_sock);
+    readWriteInfinite = 0;
+    serverOpen = 0;
+    isConnectedServer = 0;
     threadTcp.join();
     printf("[c] threadTcp joined\n");
 

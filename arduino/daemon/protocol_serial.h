@@ -20,11 +20,11 @@ typedef struct _ValueInput {
 } ValueInput;
 
 typedef struct _TimeOnOff {
+  uint16_t update;
   uint16_t onTime;
   uint16_t offTime;
-  int8_t targetCount;
   uint16_t lastState;
-  uint16_t update;
+  int8_t targetCount;
   int8_t order;
 } TimeOnOff;
 
