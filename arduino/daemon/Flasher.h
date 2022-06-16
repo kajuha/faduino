@@ -6,21 +6,23 @@ class Flasher {
   enum OUTPUT_LASTSTATE {
     INIT, SET, IDLE
   };
-  
+
 	int outputPin;
 	long onTime;
 	long offTime;
 	long actualCount, targetCount;
   long lastState;
+  int order;
 
 	int ledState;
 	unsigned long previousMillis;
+  int fsmLastState;
 
   public:
-  Flasher(int outputPin, long onTime, long offTime, long targetCount, long lastState) {
+    Flasher(int outputPin, long onTime, long offTime, long targetCount, long lastState, int order) {
     this->outputPin = outputPin;
-    pinMode(outputPin, OUTPUT);     
-      
+    pinMode(outputPin, OUTPUT);
+
     this->onTime = onTime;
     this->offTime = offTime;
 
@@ -28,16 +30,39 @@ class Flasher {
     this->actualCount = 0;
 
     this->lastState = lastState;
-    
-    ledState = LOW; 
+
+    fsmLastState = OUTPUT_LASTSTATE::INIT;
     previousMillis = 0;
+
+#define ORDER_EN 0
+    #if ORDER_EN
+    // Flasher을 사용하지 않을 경우
+    if (targetCount == STATE_ACT::DIRECT) {
+      digitalWrite(outputPin, lastState);
+      ledState = lastState;
+    } else {
+      if (order == FADUINO::ORDER::OFF_FIRST) {
+        ledState = HIGH;
+      } else {
+        ledState = LOW;
+      }
+    }
+    #else
+    ledState = LOW;
+    #endif
   }
 
   void update() {
     unsigned long currentMillis = millis();
-    static int fsmLastState = OUTPUT_LASTSTATE::INIT;
 
-    if (targetCount == INFINITE) {
+    if (targetCount == STATE_ACT::INFINITE) {
+    } else if (targetCount == STATE_ACT::DIRECT) {
+      #if ORDER_EN
+      #else
+      digitalWrite(outputPin, lastState);
+      ledState = lastState;
+      return;
+      #endif
     } else if (targetCount <= actualCount) {
       switch (fsmLastState) {
         case OUTPUT_LASTSTATE::INIT:
@@ -57,21 +82,40 @@ class Flasher {
     }
 
     fsmLastState = OUTPUT_LASTSTATE::INIT;
-     
+
     if((ledState == HIGH) && (currentMillis - previousMillis >= onTime)) {
       ledState = LOW;
       previousMillis = currentMillis;
       digitalWrite(outputPin, ledState);
 
+      #if ORDER_EN
+      if (order == FADUINO::ORDER::OFF_FIRST) {
+
+      } else {
+        actualCount++;
+      }
+      #else
       actualCount++;
+      #endif
     } else if ((ledState == LOW) && (currentMillis - previousMillis >= offTime)) {
       ledState = HIGH;
       previousMillis = currentMillis;
       digitalWrite(outputPin, ledState);
+
+      #if ORDER_EN
+      if (order == FADUINO::ORDER::OFF_FIRST) {
+        actualCount++;
+      } else {
+
+      }
+      #else
+      #endif
+    } else {
+
     }
   }
 
-  void setOnOffTime(long onTime, long offTime, long targetCount, long lastState) {
+  void setOnOffTime(long onTime, long offTime, long targetCount, long lastState, int order) {
     this->onTime = onTime;
     this->offTime = offTime;
 
@@ -79,8 +123,16 @@ class Flasher {
     this->actualCount = 0;
 
     this->lastState = lastState;
-    
-    ledState = LOW; 
+
+    #if ORDER_EN
+    if (order == FADUINO::ORDER::OFF_FIRST) {
+      ledState = HIGH;
+    } else {
+      ledState = LOW;
+    }
+    #else
+    ledState = LOW;
+    #endif
     previousMillis = 0;
   }
 };

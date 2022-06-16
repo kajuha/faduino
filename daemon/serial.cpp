@@ -148,30 +148,30 @@ bool Faduino::sendFaduinoCmd(ValueOutput valueOutput) {
 	printf("\n");
 	#endif
 	printf("TS(us): %d\n", *((uint32_t*)(serialBufferTx+IDX_TS)));
-	printf("led_green(on: %5d off: %5d count: %2d last: %1d update: %1d)\n",
+	printf("led_green(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.led_green.onTime, valueOutput.led_green.offTime,
 		valueOutput.led_green.targetCount, valueOutput.led_green.lastState,
-		valueOutput.led_green.update);
-	printf("led_red  (on: %5d off: %5d count: %2d last: %1d update: %1d)\n",
+		valueOutput.led_green.update, valueOutput.led_green.order);
+	printf("led_red  (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.led_red.onTime, valueOutput.led_red.offTime,
 		valueOutput.led_red.targetCount, valueOutput.led_red.lastState,
-		valueOutput.led_red.update);
-	printf("buzzer   (on: %5d off: %5d count: %2d last: %1d update: %1d)\n",
+		valueOutput.led_red.update, valueOutput.led_red.order);
+	printf("buzzer   (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.buzzer.onTime, valueOutput.buzzer.offTime,
 		valueOutput.buzzer.targetCount, valueOutput.buzzer.lastState,
-		valueOutput.buzzer.update);
-	printf("led_start(on: %5d off: %5d count: %2d last: %1d update: %1d)\n",
+		valueOutput.buzzer.update, valueOutput.buzzer.order);
+	printf("led_start(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.led_start.onTime, valueOutput.led_start.offTime,
 		valueOutput.led_start.targetCount, valueOutput.led_start.lastState,
-		valueOutput.led_start.update);
-	printf("led_stop (on: %5d off: %5d count: %2d last: %1d update: %1d)\n",
+		valueOutput.led_start.update, valueOutput.led_start.order);
+	printf("led_stop (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.led_stop.onTime, valueOutput.led_stop.offTime,
 		valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState,
-		valueOutput.led_stop.update);
-	printf("rel_break(on: %5d off: %5d count: %2d last: %1d update: %1d)\n",
+		valueOutput.led_stop.update, valueOutput.led_stop.order);
+	printf("rel_break(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.rel_break.onTime, valueOutput.rel_break.offTime,
 		valueOutput.rel_break.targetCount, valueOutput.rel_break.lastState,
-		valueOutput.rel_break.update);
+		valueOutput.rel_break.update, valueOutput.rel_break.order);
 	#endif
 
 	return true;

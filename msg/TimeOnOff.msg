@@ -1,5 +1,6 @@
 uint16 onTime
 uint16 offTime
-uint16 targetCount
+int8 targetCount
 uint16 lastState
 uint16 update
+int8 order

@@ -22,9 +22,10 @@ typedef struct _ValueInput {
 typedef struct _TimeOnOff {
   uint16_t onTime;
   uint16_t offTime;
-  uint16_t targetCount;
+  int8_t targetCount;
   uint16_t lastState;
   uint16_t update;
+  int8_t order;
 } TimeOnOff;
 
 typedef struct _ValueOutput {
@@ -63,10 +64,13 @@ namespace FADUINO {
   enum RELAY {
     OFF, ON
   };
+  enum ORDER {
+    OFF_FIRST=-1, ON_FIRST
+  };
 }
 
 enum STATE_ACT {
-  INFINITE, ONCE, TWICE, THRICE, T4, T5, T6, T7, T8, T9, T10
+  DIRECT=-1, INFINITE, ONCE, TWICE, THRICE, T4, T5, T6, T7, T8, T9, T10
 };
 
 enum STATE_INPUT {

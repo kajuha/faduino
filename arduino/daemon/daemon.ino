@@ -41,13 +41,13 @@ PinButton swRed(PIN_INPUT_SW_RED, INPUT);
 PinButton swStop(PIN_INPUT_SW_STOP, INPUT_PULLUP);
 
 // 출력핀 변수(클래스)(블링크 및 온오프 등 출력)
-Flasher swPc(PIN_OUTPUT_SW_PC, 0, 0, INFINITE, FADUINO::RELAY::OFF);
-Flasher buzzer(PIN_OUTPUT_BUZZER, 0, 0, INFINITE, FADUINO::RELAY::OFF);
-Flasher ledGreen(PIN_OUTPUT_LED_GREEN, 0, 0, INFINITE, FADUINO::RELAY::OFF);
-Flasher ledRed(PIN_OUTPUT_LED_RED, 0, 0, INFINITE, FADUINO::RELAY::OFF);
-Flasher ledStart(PIN_OUTPUT_LED_START, 0, 0, INFINITE, FADUINO::RELAY::OFF);
-Flasher ledStop(PIN_OUTPUT_LED_STOP, 0, 0, INFINITE, FADUINO::RELAY::OFF);
-Flasher relBreak(PIN_OUTPUT_REL_BREAK, 0, 0, INFINITE, FADUINO::RELAY::OFF);
+Flasher swPc(PIN_OUTPUT_SW_PC, 0, 0, INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher buzzer(PIN_OUTPUT_BUZZER, 0, 0, INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher ledGreen(PIN_OUTPUT_LED_GREEN, 0, 0, INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher ledRed(PIN_OUTPUT_LED_RED, 0, 0, INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher ledStart(PIN_OUTPUT_LED_START, 0, 0, INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher ledStop(PIN_OUTPUT_LED_STOP, 0, 0, INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher relBreak(PIN_OUTPUT_REL_BREAK, 0, 0, INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::OFF_FIRST);
 
 int stateEstopL;
 int stateEstopR;
@@ -65,16 +65,25 @@ void setup() {
   pinMode(PIN_INPUT_ESTOP_L, INPUT);
   pinMode(PIN_INPUT_ESTOP_R, INPUT);
 
+  #define FLASHER_RELAY_BREAK_EN 0
+  #if FLASHER_RELAY_BREAK_EN
+  relBreak.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::ON, FADUINO::ORDER::OFF_FIRST);
+  relBreak.update();
+  #else
+  pinMode(PIN_OUTPUT_REL_BREAK, OUTPUT);
+  digitalWrite(PIN_OUTPUT_REL_BREAK, HIGH);
+  #endif
+
   us_now = us_pre = millis();
   
   // faduino 부팅시 GREEN/RED LED ON/OFF(1000,500) 무한 반복 및 비프음(500,200) 5회
   // daemon 시작시 GREEN/RED LED ON/OFF(500,1000) 5회 및 비프음(200,500) 5회
-  ledGreen.setOnOffTime(1000, 500, STATE_ACT::INFINITE, FADUINO::RELAY::OFF);
-  ledRed.setOnOffTime(1000, 500, STATE_ACT::INFINITE, FADUINO::RELAY::OFF);
-  buzzer.setOnOffTime(500, 200, STATE_ACT::T5, FADUINO::RELAY::OFF);
+  buzzer.setOnOffTime(200, 200, STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+  ledGreen.setOnOffTime(1000, 500, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+  ledRed.setOnOffTime(1000, 500, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
 
   // pc 전원 ON
-  swPc.setOnOffTime(BOOT_SW_MSEC, 1000, STATE_ACT::ONCE, FADUINO::RELAY::OFF);
+  swPc.setOnOffTime(BOOT_SW_MSEC, 1000, STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
   ts_now = millis();
   ts_bootup_start = ts_now;
 }
@@ -163,7 +172,7 @@ void loop() {
     }
     // 부팅된 상태도 아니고 부팅
     else {
-      swPc.setOnOffTime(BOOT_SW_MSEC, 1000, STATE_ACT::ONCE, FADUINO::RELAY::OFF);
+      swPc.setOnOffTime(BOOT_SW_MSEC, 1000, STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
       ts_bootup_start = ts_now;
     }
   }
@@ -224,7 +233,10 @@ void loop() {
   buzzer.update();
   ledStart.update();
   ledStop.update();
+  #if FLASHER_RELAY_BREAK_EN
   relBreak.update();
+  #else
+  #endif
 }
 
 bool parseData() {
@@ -346,12 +358,19 @@ void checksumData(unsigned char* packet)
     switch (packet[IDX_TYPE]) {
       case TYPE_CMD::CMD:
         memcpy(&valueOutput, packet+IDX_DATA, SIZE_DATA_OUTPUT);
-        if (valueOutput.led_green.update) ledGreen.setOnOffTime(valueOutput.led_green.onTime, valueOutput.led_green.offTime, valueOutput.led_green.targetCount, valueOutput.led_green.lastState);
-        if (valueOutput.led_red.update) ledRed.setOnOffTime(valueOutput.led_red.onTime, valueOutput.led_red.offTime, valueOutput.led_red.targetCount, valueOutput.led_red.lastState);
-        if (valueOutput.buzzer.update) buzzer.setOnOffTime(valueOutput.buzzer.onTime, valueOutput.buzzer.offTime, valueOutput.buzzer.targetCount, valueOutput.buzzer.lastState);
-        if (valueOutput.led_start.update) ledStart.setOnOffTime(valueOutput.led_start.onTime, valueOutput.led_start.offTime, valueOutput.led_start.targetCount, valueOutput.led_start.lastState);
-        if (valueOutput.led_stop.update) ledStop.setOnOffTime(valueOutput.led_stop.onTime, valueOutput.led_stop.offTime, valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState);
-        if (valueOutput.rel_break.update) relBreak.setOnOffTime(valueOutput.rel_break.onTime, valueOutput.rel_break.offTime, valueOutput.rel_break.targetCount, valueOutput.rel_break.lastState);
+        if (valueOutput.led_green.update) ledGreen.setOnOffTime(valueOutput.led_green.onTime, valueOutput.led_green.offTime, valueOutput.led_green.targetCount, valueOutput.led_green.lastState, valueOutput.led_green.order);
+        if (valueOutput.led_red.update) ledRed.setOnOffTime(valueOutput.led_red.onTime, valueOutput.led_red.offTime, valueOutput.led_red.targetCount, valueOutput.led_red.lastState, valueOutput.led_red.order);
+        if (valueOutput.buzzer.update) buzzer.setOnOffTime(valueOutput.buzzer.onTime, valueOutput.buzzer.offTime, valueOutput.buzzer.targetCount, valueOutput.buzzer.lastState, valueOutput.buzzer.order);
+        if (valueOutput.led_start.update) ledStart.setOnOffTime(valueOutput.led_start.onTime, valueOutput.led_start.offTime, valueOutput.led_start.targetCount, valueOutput.led_start.lastState, valueOutput.led_start.order);
+        if (valueOutput.led_stop.update) ledStop.setOnOffTime(valueOutput.led_stop.onTime, valueOutput.led_stop.offTime, valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState, valueOutput.led_stop.order);
+        #if FLASHER_RELAY_BREAK_EN
+        if (valueOutput.rel_break.update) relBreak.setOnOffTime(valueOutput.rel_break.onTime, valueOutput.rel_break.offTime, valueOutput.rel_break.targetCount, valueOutput.rel_break.lastState, valueOutput.rel_break.order);
+        #else
+        if (valueOutput.rel_break.update) {
+          delay(valueOutput.rel_break.offTime);
+          digitalWrite(PIN_OUTPUT_REL_BREAK, LOW);
+        }
+        #endif
         break;
       case TYPE_CMD::HB:
         break;
