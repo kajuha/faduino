@@ -209,7 +209,7 @@ void fThread(std::string host_name, int tcp_port) {
                 continue;
                 #else
                 readWriteInfinite = 0;
-                serverOpen = 0;
+                serverOpen = 1;
                 isConnectedServer = 0;
                 break;
                 #endif
