@@ -10,6 +10,8 @@
 
 #define BAUDRATE 115200
 
+#define BREAK_MAGIC 0x55AA
+
 #pragma pack(push, 1)
 typedef struct _ValueInput {
   uint16_t estop_l;

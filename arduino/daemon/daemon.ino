@@ -65,14 +65,8 @@ void setup() {
   pinMode(PIN_INPUT_ESTOP_L, INPUT);
   pinMode(PIN_INPUT_ESTOP_R, INPUT);
 
-  #define FLASHER_RELAY_BREAK_EN 0
-  #if FLASHER_RELAY_BREAK_EN
   relBreak.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::ON, FADUINO::ORDER::OFF_FIRST);
   relBreak.update();
-  #else
-  pinMode(PIN_OUTPUT_REL_BREAK, OUTPUT);
-  digitalWrite(PIN_OUTPUT_REL_BREAK, HIGH);
-  #endif
 
   us_now = us_pre = millis();
   
@@ -233,10 +227,7 @@ void loop() {
   buzzer.update();
   ledStart.update();
   ledStop.update();
-  #if FLASHER_RELAY_BREAK_EN
   relBreak.update();
-  #else
-  #endif
 }
 
 bool parseData() {
@@ -363,14 +354,7 @@ void checksumData(unsigned char* packet)
         if (valueOutput.buzzer.update) buzzer.setOnOffTime(valueOutput.buzzer.onTime, valueOutput.buzzer.offTime, valueOutput.buzzer.targetCount, valueOutput.buzzer.lastState, valueOutput.buzzer.order);
         if (valueOutput.led_start.update) ledStart.setOnOffTime(valueOutput.led_start.onTime, valueOutput.led_start.offTime, valueOutput.led_start.targetCount, valueOutput.led_start.lastState, valueOutput.led_start.order);
         if (valueOutput.led_stop.update) ledStop.setOnOffTime(valueOutput.led_stop.onTime, valueOutput.led_stop.offTime, valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState, valueOutput.led_stop.order);
-        #if FLASHER_RELAY_BREAK_EN
-        if (valueOutput.rel_break.update) relBreak.setOnOffTime(valueOutput.rel_break.onTime, valueOutput.rel_break.offTime, valueOutput.rel_break.targetCount, valueOutput.rel_break.lastState, valueOutput.rel_break.order);
-        #else
-        if (valueOutput.rel_break.update) {
-          delay(valueOutput.rel_break.offTime);
-          digitalWrite(PIN_OUTPUT_REL_BREAK, LOW);
-        }
-        #endif
+        if (valueOutput.rel_break.update == BREAK_MAGIC) relBreak.setOnOffTime(valueOutput.rel_break.onTime, valueOutput.rel_break.offTime, valueOutput.rel_break.targetCount, valueOutput.rel_break.lastState, valueOutput.rel_break.order);
         break;
       case TYPE_CMD::HB:
         break;
