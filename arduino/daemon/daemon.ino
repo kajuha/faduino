@@ -59,7 +59,7 @@ unsigned long us_now, us_pre;
 
 void setup() {
   // 통신 설정
-  Serial.begin(BAUDRATE);
+  Serial1.begin(BAUDRATE);
 
   // 입력핀(비상스위치) 설정
   pinMode(PIN_INPUT_ESTOP_L, INPUT);
@@ -189,7 +189,7 @@ void loop() {
     sprintf(buffer+IDX_CRC16_INPUT, "%04x", crc16in);
     buffer[IDX_TAIL_INPUT] = DATA_TAIL;
 
-    Serial.write(buffer, SIZE_TOTAL_INPUT);
+    Serial1.write(buffer, SIZE_TOTAL_INPUT);
   }
 
   // 주기마다 아날로그 데이터 송신
@@ -212,7 +212,7 @@ void loop() {
     sprintf(buffer+IDX_CRC16_INPUT, "%04x", crc16in);
     buffer[IDX_TAIL_INPUT] = DATA_TAIL;
 
-    Serial.write(buffer, SIZE_TOTAL_INPUT);
+    Serial1.write(buffer, SIZE_TOTAL_INPUT);
   }
   #endif
   // 수신 데이터 처리
@@ -236,9 +236,9 @@ bool parseData() {
 
   switch (state) {
     case FSM_FADUINO::HEAD:
-      if (Serial.available() >= SIZE_HEAD) {
+      if (Serial1.available() >= SIZE_HEAD) {
         #if 1
-        Serial.readBytes(packet+IDX_HEAD, SIZE_HEAD);
+        Serial1.readBytes(packet+IDX_HEAD, SIZE_HEAD);
         #else
         packet[IDX_HEAD] = que.front();
         que.pop();
@@ -251,9 +251,9 @@ bool parseData() {
       }
       break;
     case FSM_FADUINO::TYPE:
-      if (Serial.available() >= SIZE_TYPE) {
+      if (Serial1.available() >= SIZE_TYPE) {
         #if 1
-        Serial.readBytes(packet+IDX_TYPE, SIZE_TYPE);
+        Serial1.readBytes(packet+IDX_TYPE, SIZE_TYPE);
         #else
         packet[IDX_TYPE] = que.front();
         que.pop();
@@ -263,9 +263,9 @@ bool parseData() {
       }
       break;
     case FSM_FADUINO::TS:
-      if (Serial.available() >= SIZE_TS) {
+      if (Serial1.available() >= SIZE_TS) {
         #if 1
-        Serial.readBytes(packet+IDX_TS, SIZE_TS);
+        Serial1.readBytes(packet+IDX_TS, SIZE_TS);
         #else
         for (int i=0; i<SIZE_TS; i++) {
           packet[IDX_TS+i] = que.front();
@@ -277,9 +277,9 @@ bool parseData() {
       }
       break;
     case FSM_FADUINO::DATA:
-      if (Serial.available() >= SIZE_DATA_OUTPUT) {
+      if (Serial1.available() >= SIZE_DATA_OUTPUT) {
         #if 1
-        Serial.readBytes(packet+IDX_DATA, SIZE_DATA_OUTPUT);
+        Serial1.readBytes(packet+IDX_DATA, SIZE_DATA_OUTPUT);
         #else
         for (int i=0; i<SIZE_DATA_OUTPUT; i++) {
           packet[IDX_DATA+i] = que.front();
@@ -291,9 +291,9 @@ bool parseData() {
       }
       break;
     case FSM_FADUINO::CRC16:
-      if (Serial.available() >= SIZE_CRC16) {
+      if (Serial1.available() >= SIZE_CRC16) {
         #if 1
-        Serial.readBytes(packet+IDX_CRC16_OUTPUT, SIZE_CRC16);
+        Serial1.readBytes(packet+IDX_CRC16_OUTPUT, SIZE_CRC16);
         #else
         for (int i=0; i<SIZE_CRC16; i++) {
           packet[IDX_CRC16+i] = que.front();
@@ -305,9 +305,9 @@ bool parseData() {
       }
       break;
     case FSM_FADUINO::TAIL:
-      if (Serial.available() >= SIZE_TAIL) {
+      if (Serial1.available() >= SIZE_TAIL) {
         #if 1
-        Serial.readBytes(packet+IDX_TAIL_OUTPUT, SIZE_TAIL);
+        Serial1.readBytes(packet+IDX_TAIL_OUTPUT, SIZE_TAIL);
         #else
         packet[IDX_TAIL] = que.front();
         que.pop();
