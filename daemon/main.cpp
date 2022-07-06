@@ -63,14 +63,6 @@ void checksumTcpState(unsigned char* packet) {
 
 				#if 1
 				printf("[s] TS(us): %d\n", *((uint32_t*)(packet+IDX_TS)));
-				printf("[s] led_green(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
-					valueOutput.led_green.onTime, valueOutput.led_green.offTime,
-					valueOutput.led_green.targetCount, valueOutput.led_green.lastState,
-					valueOutput.led_green.update, valueOutput.led_green.order);
-				printf("[s] led_red  (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
-					valueOutput.led_red.onTime, valueOutput.led_red.offTime,
-					valueOutput.led_red.targetCount, valueOutput.led_red.lastState,
-					valueOutput.led_red.update, valueOutput.led_red.order);
 				printf("[s] buzzer   (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 					valueOutput.buzzer.onTime, valueOutput.buzzer.offTime,
 					valueOutput.buzzer.targetCount, valueOutput.buzzer.lastState,
@@ -79,10 +71,18 @@ void checksumTcpState(unsigned char* packet) {
 					valueOutput.led_start.onTime, valueOutput.led_start.offTime,
 					valueOutput.led_start.targetCount, valueOutput.led_start.lastState,
 					valueOutput.led_start.update, valueOutput.led_start.order);
+				printf("[s] led_green(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+					valueOutput.led_green.onTime, valueOutput.led_green.offTime,
+					valueOutput.led_green.targetCount, valueOutput.led_green.lastState,
+					valueOutput.led_green.update, valueOutput.led_green.order);
 				printf("[s] led_stop (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 					valueOutput.led_stop.onTime, valueOutput.led_stop.offTime,
 					valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState,
 					valueOutput.led_stop.update, valueOutput.led_stop.order);
+				printf("[s] led_red  (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+					valueOutput.led_red.onTime, valueOutput.led_red.offTime,
+					valueOutput.led_red.targetCount, valueOutput.led_red.lastState,
+					valueOutput.led_red.update, valueOutput.led_red.order);
 				printf("[s] rel_break(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 					valueOutput.rel_break.onTime, valueOutput.rel_break.offTime,
 					valueOutput.rel_break.targetCount, valueOutput.rel_break.lastState,
@@ -344,7 +344,6 @@ void fThread(int* tcpPort, bool* isSerial) {
 
 int main(int argc, char* argv[]) {
     int tcpPort;
-	bool isSerial = false;
 
     if (argc != ARG_MAX) {
         printf("!!! requirement arguments is %d ea !!!\n", ARG_MAX);
@@ -368,6 +367,7 @@ int main(int argc, char* argv[]) {
 
 #define THREAD_TCP_EN 1
 	#if THREAD_TCP_EN
+	bool isSerial = false;
     boost::thread threadTcp(fThread, &tcpPort, &isSerial);
 	#endif
 
@@ -397,51 +397,50 @@ int main(int argc, char* argv[]) {
 	sleep(1);
 
 	// PC가 정상적으로 켜졌을 경우 비프 및 LED 상태 알림
-	// faduino 부팅시 GREEN/RED LED ON/OFF(1000,500) 무한 반복 및 비프음(500,200) 5회
-	// daemon 시작시 GREEN/RED LED ON/OFF(500,1000) 5회 및 비프음(200,500) 5회
-	valueOutput.led_green.onTime = 0;
-	valueOutput.led_green.offTime = 0;
-	valueOutput.led_green.targetCount = STATE_ACT::T5;
-	valueOutput.led_green.lastState = FADUINO::RELAY::ON;
-	valueOutput.led_green.order = FADUINO::ORDER::ON_FIRST;
-	valueOutput.led_red.onTime = 0;
-	valueOutput.led_red.offTime = 0;
-	valueOutput.led_red.targetCount = STATE_ACT::T5;
-	valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
-	valueOutput.led_red.order = FADUINO::ORDER::ON_FIRST;
 	valueOutput.buzzer.onTime = 200;
 	valueOutput.buzzer.offTime = 200;
 	valueOutput.buzzer.targetCount = STATE_ACT::THRICE;
 	valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
 	valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
-	valueOutput.led_start.onTime = 1000;
-	valueOutput.led_start.offTime = 500;
-	valueOutput.led_start.targetCount = STATE_ACT::T5;
-	valueOutput.led_start.lastState = FADUINO::RELAY::ON;
+	valueOutput.led_start.onTime = 0;
+	valueOutput.led_start.offTime = 0;
+	valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
+	valueOutput.led_start.lastState = FADUINO::RELAY::OFF;
 	valueOutput.led_start.order = FADUINO::ORDER::ON_FIRST;
-	valueOutput.led_stop.onTime = 500;
-	valueOutput.led_stop.offTime = 1000;
-	valueOutput.led_stop.targetCount = STATE_ACT::T5;
+	valueOutput.led_green.onTime = 0;
+	valueOutput.led_green.offTime = 0;
+	valueOutput.led_green.targetCount = STATE_ACT::DIRECT;
+	valueOutput.led_green.lastState = FADUINO::RELAY::OFF;
+	valueOutput.led_green.order = FADUINO::ORDER::ON_FIRST;
+	valueOutput.led_red.onTime = 0;
+	valueOutput.led_red.offTime = 0;
+	valueOutput.led_red.targetCount = STATE_ACT::DIRECT;
+	valueOutput.led_red.lastState = FADUINO::RELAY::ON;
+	valueOutput.led_red.order = FADUINO::ORDER::ON_FIRST;
+	valueOutput.led_stop.onTime = 0;
+	valueOutput.led_stop.offTime = 0;
+	valueOutput.led_stop.targetCount = STATE_ACT::DIRECT;
 	valueOutput.led_stop.lastState = FADUINO::RELAY::ON;
 	valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
-	valueOutput.rel_break.onTime = 0;
-	valueOutput.rel_break.offTime = 0;
-	valueOutput.rel_break.targetCount = STATE_ACT::INFINITE;
-	valueOutput.rel_break.lastState = FADUINO::RELAY::OFF;
-	valueOutput.rel_break.order = FADUINO::ORDER::OFF_FIRST;
-	valueOutput.led_green.update = 1;
-	valueOutput.led_red.update = 1;
+
 	valueOutput.buzzer.update = 1;
-	valueOutput.led_start.update = 0;
-	valueOutput.led_stop.update = 0;
-	valueOutput.rel_break.update = 0;
+	valueOutput.led_green.update = 1;
+	valueOutput.led_start.update = 1;
+	valueOutput.led_red.update = 1;
+	valueOutput.led_stop.update = 1;
+
 	faduino.sendFaduinoCmd(valueOutput);
     
     printf("rosOpenCmd: %s\n", ROS_RUN);
     printf("rosCheckCmd: %s\n", ROS_CHECK);
     printf("rosCloseCmd: %s\n", ROS_KILL);
 
+	#if THREAD_TCP_EN
 	isSerial = true;
+	#endif
+
+	bool shutdown = false;
+	int shutdownFSM = 0;
 
 	while (true) {
 		usleep(100);
@@ -449,14 +448,75 @@ int main(int argc, char* argv[]) {
 
 		static int sizeFaduinoState;
 		sizeFaduinoState = faduino.queFaduinoState.size();
+
+		if (shutdown) {
+			switch (shutdownFSM) {
+				case 0:
+					valueOutput.buzzer.onTime = 1000;
+					valueOutput.buzzer.offTime = 1000;
+					valueOutput.buzzer.targetCount = STATE_ACT::T10;
+					valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
+					valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
+					valueOutput.led_start.onTime = 0;
+					valueOutput.led_start.offTime = 0;
+					valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
+					valueOutput.led_start.lastState = FADUINO::RELAY::OFF;
+					valueOutput.led_start.order = FADUINO::ORDER::ON_FIRST;
+					valueOutput.led_green.onTime = 0;
+					valueOutput.led_green.offTime = 0;
+					valueOutput.led_green.targetCount = STATE_ACT::DIRECT;
+					valueOutput.led_green.lastState = FADUINO::RELAY::OFF;
+					valueOutput.led_green.order = FADUINO::ORDER::ON_FIRST;
+					valueOutput.led_red.onTime = 500;
+					valueOutput.led_red.offTime = 500;
+					valueOutput.led_red.targetCount = STATE_ACT::INFINITE;
+					valueOutput.led_red.lastState = FADUINO::RELAY::ON;
+					valueOutput.led_red.order = FADUINO::ORDER::ON_FIRST;
+					valueOutput.led_stop.onTime = 500;
+					valueOutput.led_stop.offTime = 500;
+					valueOutput.led_stop.targetCount = STATE_ACT::INFINITE;
+					valueOutput.led_stop.lastState = FADUINO::RELAY::ON;
+					valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
+
+					valueOutput.buzzer.update = 1;
+					valueOutput.led_green.update = 1;
+					valueOutput.led_start.update = 1;
+					valueOutput.led_red.update = 1;
+					valueOutput.led_stop.update = 1;
+
+					valueOutput.rel_break.onTime = (valueOutput.buzzer.onTime+valueOutput.buzzer.offTime)*(STATE_ACT::T10);
+					valueOutput.rel_break.offTime = 1000;
+					valueOutput.rel_break.targetCount = STATE_ACT::ONCE;
+					valueOutput.rel_break.lastState = FADUINO::RELAY::OFF;
+					valueOutput.rel_break.order = FADUINO::ORDER::ON_FIRST;
+
+					valueOutput.rel_break.update = BREAK_MAGIC;
+
+					faduino.sendFaduinoCmd(valueOutput);
+					valueOutputPre = valueOutput;
+
+					shutdownFSM++;
+
+					prog.execute(AMR_OFF);
+					printf("%s\n", AMR_OFF);
+					break;
+				default:
+					break;
+			}
+		}
+
 		if (sizeFaduinoState) {
+			#if 0
 			printf("faduino.queFaduinoState.size(): %d\n", sizeFaduinoState);
+			#endif
 			valueInput = faduino.queFaduinoState.front();
 			faduino.queFaduinoState.pop();
 
+			#if 0
 			printf("valueInput   : %1d %1d %1d %1d %1d\nvalueInputPre: %1d %1d %1d %1d %1d\n",
 				valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red, valueInput.sw_stop,
 				valueInputPre.estop_l, valueInputPre.estop_r, valueInputPre.sw_green, valueInputPre.sw_red, valueInputPre.sw_stop);
+			#endif
 			
 			if (valueInputPre.estop_l != valueInput.estop_l ||
 				valueInputPre.estop_r != valueInput.estop_r ||
@@ -469,30 +529,43 @@ int main(int argc, char* argv[]) {
 					case PUSHED:
 						#if 1
 						// 상위로 전달을 하고 상위에서 수신명령에 대한 처리를 실시
+						valueOutput.buzzer.onTime = 10000;
+						valueOutput.buzzer.offTime = 1000;
+						valueOutput.buzzer.targetCount = STATE_ACT::ONCE;
+						valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
+						valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_start.onTime = 0;
+						valueOutput.led_start.offTime = 0;
+						valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
+						valueOutput.led_start.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_start.order = FADUINO::ORDER::ON_FIRST;
 						valueOutput.led_green.onTime = 0;
 						valueOutput.led_green.offTime = 0;
-						valueOutput.led_green.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_green.targetCount = STATE_ACT::DIRECT;
 						valueOutput.led_green.lastState = FADUINO::RELAY::OFF;
 						valueOutput.led_green.order = FADUINO::ORDER::ON_FIRST;
 						valueOutput.led_red.onTime = 1000;
-						valueOutput.led_red.offTime = 0;
+						valueOutput.led_red.offTime = 1000;
 						valueOutput.led_red.targetCount = STATE_ACT::INFINITE;
-						valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_red.lastState = FADUINO::RELAY::ON;
 						valueOutput.led_red.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.buzzer.onTime = 1000;
-						valueOutput.buzzer.offTime = 0;
-						valueOutput.buzzer.targetCount = STATE_ACT::INFINITE;
-						valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
-						valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.led_green.update = 1;
-						valueOutput.led_red.update = 1;
+						valueOutput.led_stop.onTime = 1000;
+						valueOutput.led_stop.offTime = 1000;
+						valueOutput.led_stop.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_stop.lastState = FADUINO::RELAY::ON;
+						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
+
 						valueOutput.buzzer.update = 1;
-						valueOutput.led_start.update = 0;
-						valueOutput.led_stop.update = 0;
-						valueOutput.rel_break.update = 0;
+						valueOutput.led_green.update = 1;
+						valueOutput.led_start.update = 1;
+						valueOutput.led_red.update = 1;
+						valueOutput.led_stop.update = 1;
+
 						faduino.sendFaduinoCmd(valueOutput);
-						printf("valueInput.estop_l PUSHED\n");
 						valueOutputPre = valueOutput;
+						#if 0
+						printf("valueInput.estop_l PUSHED\n");
+						#endif
 						#endif
 						break;
 					case RELEASED:
@@ -508,30 +581,43 @@ int main(int argc, char* argv[]) {
 					case PUSHED:
 						#if 1
 						// 상위로 전달을 하고 상위에서 수신명령에 대한 처리를 실시
+						valueOutput.buzzer.onTime = 10000;
+						valueOutput.buzzer.offTime = 1000;
+						valueOutput.buzzer.targetCount = STATE_ACT::ONCE;
+						valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
+						valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_start.onTime = 0;
+						valueOutput.led_start.offTime = 0;
+						valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
+						valueOutput.led_start.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_start.order = FADUINO::ORDER::ON_FIRST;
 						valueOutput.led_green.onTime = 0;
 						valueOutput.led_green.offTime = 0;
-						valueOutput.led_green.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_green.targetCount = STATE_ACT::DIRECT;
 						valueOutput.led_green.lastState = FADUINO::RELAY::OFF;
 						valueOutput.led_green.order = FADUINO::ORDER::ON_FIRST;
 						valueOutput.led_red.onTime = 1000;
-						valueOutput.led_red.offTime = 0;
+						valueOutput.led_red.offTime = 1000;
 						valueOutput.led_red.targetCount = STATE_ACT::INFINITE;
-						valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_red.lastState = FADUINO::RELAY::ON;
 						valueOutput.led_red.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.buzzer.onTime = 1000;
-						valueOutput.buzzer.offTime = 0;
-						valueOutput.buzzer.targetCount = STATE_ACT::INFINITE;
-						valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
-						valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.led_green.update = 1;
-						valueOutput.led_red.update = 1;
+						valueOutput.led_stop.onTime = 1000;
+						valueOutput.led_stop.offTime = 1000;
+						valueOutput.led_stop.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_stop.lastState = FADUINO::RELAY::ON;
+						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
+
 						valueOutput.buzzer.update = 1;
-						valueOutput.led_start.update = 0;
-						valueOutput.led_stop.update = 0;
-						valueOutput.rel_break.update = 0;
+						valueOutput.led_green.update = 1;
+						valueOutput.led_start.update = 1;
+						valueOutput.led_red.update = 1;
+						valueOutput.led_stop.update = 1;
+
 						faduino.sendFaduinoCmd(valueOutput);
-						printf("valueInput.estop_r PUSHED\n");
 						valueOutputPre = valueOutput;
+						#if 0
+						printf("valueInput.estop_r PUSHED\n");
+						#endif
 						#endif
 						break;
 					case RELEASED:
@@ -550,88 +636,89 @@ int main(int argc, char* argv[]) {
 						break;
 					case DOUBLE:
 						#if 1
-						valueOutput.led_green.onTime = 1000;
-						valueOutput.led_green.offTime = 0;
-						valueOutput.led_green.targetCount = STATE_ACT::INFINITE;
-						valueOutput.led_green.lastState = FADUINO::RELAY::OFF;
-						valueOutput.led_green.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.led_red.onTime = 0;
-						valueOutput.led_red.offTime = 1000;
-						valueOutput.led_red.targetCount = STATE_ACT::INFINITE;
-						valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
-						valueOutput.led_red.order = FADUINO::ORDER::ON_FIRST;
 						valueOutput.buzzer.onTime = 500;
 						valueOutput.buzzer.offTime = 500;
 						valueOutput.buzzer.targetCount = STATE_ACT::ONCE;
 						valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
 						valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.led_green.update = 1;
-						valueOutput.led_red.update = 1;
+						valueOutput.led_start.onTime = 0;
+						valueOutput.led_start.offTime = 0;
+						valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
+						valueOutput.led_start.lastState = FADUINO::RELAY::ON;
+						valueOutput.led_start.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_green.onTime = 0;
+						valueOutput.led_green.offTime = 0;
+						valueOutput.led_green.targetCount = STATE_ACT::DIRECT;
+						valueOutput.led_green.lastState = FADUINO::RELAY::ON;
+						valueOutput.led_green.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_red.onTime = 0;
+						valueOutput.led_red.offTime = 0;
+						valueOutput.led_red.targetCount = STATE_ACT::DIRECT;
+						valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_red.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_stop.onTime = 0;
+						valueOutput.led_stop.offTime = 0;
+						valueOutput.led_stop.targetCount = STATE_ACT::DIRECT;
+						valueOutput.led_stop.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
+
 						valueOutput.buzzer.update = 1;
-						valueOutput.led_start.update = 0;
-						valueOutput.led_stop.update = 0;
-						valueOutput.rel_break.update = 0;
+						valueOutput.led_green.update = 1;
+						valueOutput.led_start.update = 1;
+						valueOutput.led_red.update = 1;
+						valueOutput.led_stop.update = 1;
+
 						faduino.sendFaduinoCmd(valueOutput);
 						valueOutputPre = valueOutput;
+						#if 0
 						printf("valueInput.sw_green DOUBLE\n");
+						#endif
 
 						if (!strlen(prog.execute(ROS_CHECK).c_str())) {
 							prog.rosRun();
 							printf("run ROS\n");
 						} else {
-							valueOutput.led_green.onTime = 1000;
-							valueOutput.led_green.offTime = 0;
-							valueOutput.led_green.targetCount = STATE_ACT::INFINITE;
-							valueOutput.led_green.lastState = FADUINO::RELAY::OFF;
-							valueOutput.led_green.order = FADUINO::ORDER::ON_FIRST;
-							valueOutput.led_red.onTime = 0;
-							valueOutput.led_red.offTime = 1000;
-							valueOutput.led_red.targetCount = STATE_ACT::INFINITE;
-							valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
-							valueOutput.led_red.order = FADUINO::ORDER::ON_FIRST;
-							valueOutput.buzzer.onTime = 300;
+							valueOutput.buzzer.onTime = 200;
 							valueOutput.buzzer.offTime = 200;
 							valueOutput.buzzer.targetCount = STATE_ACT::TWICE;
 							valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
 							valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
-							valueOutput.led_green.update = 1;
-							valueOutput.led_red.update = 1;
+							valueOutput.led_start.onTime = 0;
+							valueOutput.led_start.offTime = 0;
+							valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
+							valueOutput.led_start.lastState = FADUINO::RELAY::ON;
+							valueOutput.led_start.order = FADUINO::ORDER::ON_FIRST;
+							valueOutput.led_green.onTime = 0;
+							valueOutput.led_green.offTime = 0;
+							valueOutput.led_green.targetCount = STATE_ACT::DIRECT;
+							valueOutput.led_green.lastState = FADUINO::RELAY::ON;
+							valueOutput.led_green.order = FADUINO::ORDER::ON_FIRST;
+							valueOutput.led_red.onTime = 0;
+							valueOutput.led_red.offTime = 0;
+							valueOutput.led_red.targetCount = STATE_ACT::DIRECT;
+							valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
+							valueOutput.led_red.order = FADUINO::ORDER::ON_FIRST;
+							valueOutput.led_stop.onTime = 0;
+							valueOutput.led_stop.offTime = 0;
+							valueOutput.led_stop.targetCount = STATE_ACT::DIRECT;
+							valueOutput.led_stop.lastState = FADUINO::RELAY::OFF;
+							valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
+
 							valueOutput.buzzer.update = 1;
-							valueOutput.led_start.update = 0;
-							valueOutput.led_stop.update = 0;
-							valueOutput.rel_break.update = 0;
+							valueOutput.led_green.update = 1;
+							valueOutput.led_start.update = 1;
+							valueOutput.led_red.update = 1;
+							valueOutput.led_stop.update = 1;
+
 							faduino.sendFaduinoCmd(valueOutput);
+							valueOutputPre = valueOutput;
 							printf("already run ROS\n");
 						}
 						#endif
 						break;
 					case LONG:
-						#if 1
-						// 임시로 오동작일 경우 부저 및 LED 끄는 용도
-						valueOutput.led_green.onTime = 0;
-						valueOutput.led_green.offTime = 1000;
-						valueOutput.led_green.targetCount = STATE_ACT::INFINITE;
-						valueOutput.led_green.lastState = FADUINO::RELAY::OFF;
-						valueOutput.led_green.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.led_red.onTime = 0;
-						valueOutput.led_red.offTime = 1000;
-						valueOutput.led_red.targetCount = STATE_ACT::INFINITE;
-						valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
-						valueOutput.led_red.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.buzzer.onTime = 0;
-						valueOutput.buzzer.offTime = 1000;
-						valueOutput.buzzer.targetCount = STATE_ACT::INFINITE;
-						valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
-						valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.led_green.update = 1;
-						valueOutput.led_red.update = 1;
-						valueOutput.buzzer.update = 1;
-						valueOutput.led_start.update = 0;
-						valueOutput.led_stop.update = 0;
-						valueOutput.rel_break.update = 0;
-						faduino.sendFaduinoCmd(valueOutput);
+						#if 0
 						printf("valueInput.sw_green LONG\n");
-						valueOutputPre = valueOutput;
 						#endif
 						break;
 					default:
@@ -645,30 +732,43 @@ int main(int argc, char* argv[]) {
 					case DOUBLE:
 						#if 1
 						// 상위로 전달을 하고 상위에서 수신명령에 대한 처리를 실시
-						valueOutput.led_green.onTime = 0;
-						valueOutput.led_green.offTime = 1000;
-						valueOutput.led_green.targetCount = STATE_ACT::INFINITE;
-						valueOutput.led_green.lastState = FADUINO::RELAY::OFF;
-						valueOutput.led_green.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.led_red.onTime = 1000;
-						valueOutput.led_red.offTime = 0;
-						valueOutput.led_red.targetCount = STATE_ACT::INFINITE;
-						valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
-						valueOutput.led_red.order = FADUINO::ORDER::ON_FIRST;
 						valueOutput.buzzer.onTime = 500;
 						valueOutput.buzzer.offTime = 500;
 						valueOutput.buzzer.targetCount = STATE_ACT::TWICE;
 						valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
 						valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.led_green.update = 1;
-						valueOutput.led_red.update = 1;
+						valueOutput.led_green.onTime = 0;
+						valueOutput.led_green.offTime = 1000;
+						valueOutput.led_green.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_green.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_green.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_start.onTime = 0;
+						valueOutput.led_start.offTime = 1000;
+						valueOutput.led_start.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_start.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_start.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_red.onTime = 1000;
+						valueOutput.led_red.offTime = 0;
+						valueOutput.led_red.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_red.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_stop.onTime = 1000;
+						valueOutput.led_stop.offTime = 0;
+						valueOutput.led_stop.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_stop.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
+
 						valueOutput.buzzer.update = 1;
-						valueOutput.led_start.update = 0;
-						valueOutput.led_stop.update = 0;
-						valueOutput.rel_break.update = 0;
+						valueOutput.led_green.update = 1;
+						valueOutput.led_start.update = 1;
+						valueOutput.led_red.update = 1;
+						valueOutput.led_stop.update = 1;
+
 						faduino.sendFaduinoCmd(valueOutput);
 						valueOutputPre = valueOutput;
+						#if 0
 						printf("valueInput.sw_red DOUBLE\n");
+						#endif
 
 						prog.execute(ROS_KILL);
 						printf("kill ROS\n");
@@ -676,31 +776,18 @@ int main(int argc, char* argv[]) {
 						break;
 					case LONG:
 						#if 1
-						// 임시로 오동작일 경우 부저 및 LED 끄는 용도
-						valueOutput.led_green.onTime = 0;
-						valueOutput.led_green.offTime = 1000;
-						valueOutput.led_green.targetCount = STATE_ACT::INFINITE;
-						valueOutput.led_green.lastState = FADUINO::RELAY::OFF;
-						valueOutput.led_green.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.led_red.onTime = 0;
-						valueOutput.led_red.offTime = 1000;
-						valueOutput.led_red.targetCount = STATE_ACT::INFINITE;
-						valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
-						valueOutput.led_red.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.buzzer.onTime = 0;
-						valueOutput.buzzer.offTime = 1000;
-						valueOutput.buzzer.targetCount = STATE_ACT::INFINITE;
-						valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
-						valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.led_green.update = 1;
-						valueOutput.led_red.update = 1;
-						valueOutput.buzzer.update = 1;
-						valueOutput.led_start.update = 0;
-						valueOutput.led_stop.update = 0;
-						valueOutput.rel_break.update = 0;
-						faduino.sendFaduinoCmd(valueOutput);
 						printf("valueInput.sw_red LONG\n");
-						valueOutputPre = valueOutput;
+						#endif
+						break;
+					case VERYLONG:
+						shutdown = true;
+						#if 1
+						printf("valueInput.sw_red VERYLONG\n");
+						#endif
+						break;
+					case ULTRALONG:
+						#if 1
+						printf("valueInput.sw_red ULTRALONG\n");
 						#endif
 						break;
 					default:
@@ -714,33 +801,62 @@ int main(int argc, char* argv[]) {
 					case DOUBLE:
 						#if 1
 						// 상위로 전달을 하고 상위에서 수신명령에 대한 처리를 실시
-						valueOutput.led_start.onTime = 1000;
-						valueOutput.led_start.offTime = 500;
-						valueOutput.led_start.targetCount = STATE_ACT::T10;
-						valueOutput.led_start.lastState = FADUINO::RELAY::ON;
+						valueOutput.buzzer.onTime = 500;
+						valueOutput.buzzer.offTime = 500;
+						valueOutput.buzzer.targetCount = STATE_ACT::TWICE;
+						valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
+						valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_green.onTime = 0;
+						valueOutput.led_green.offTime = 1000;
+						valueOutput.led_green.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_green.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_green.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_start.onTime = 0;
+						valueOutput.led_start.offTime = 1000;
+						valueOutput.led_start.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_start.lastState = FADUINO::RELAY::OFF;
 						valueOutput.led_start.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.led_stop.onTime = 500;
-						valueOutput.led_stop.offTime = 1000;
-						valueOutput.led_stop.targetCount = STATE_ACT::T10;
-						valueOutput.led_stop.lastState = FADUINO::RELAY::ON;
+						valueOutput.led_red.onTime = 1000;
+						valueOutput.led_red.offTime = 0;
+						valueOutput.led_red.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_red.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_red.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_stop.onTime = 1000;
+						valueOutput.led_stop.offTime = 0;
+						valueOutput.led_stop.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_stop.lastState = FADUINO::RELAY::OFF;
 						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.rel_break.onTime = 0;
-						valueOutput.rel_break.offTime = 0;
-						valueOutput.rel_break.targetCount = STATE_ACT::INFINITE;
-						valueOutput.rel_break.lastState = FADUINO::RELAY::OFF;
-						valueOutput.rel_break.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.led_green.update = 0;
-						valueOutput.led_red.update = 0;
-						valueOutput.buzzer.update = 0;
+
+						valueOutput.buzzer.update = 1;
+						valueOutput.led_green.update = 1;
 						valueOutput.led_start.update = 1;
+						valueOutput.led_red.update = 1;
 						valueOutput.led_stop.update = 1;
-						valueOutput.rel_break.update = 0;
 						faduino.sendFaduinoCmd(valueOutput);
 						valueOutputPre = valueOutput;
+						#if 0
 						printf("valueInput.sw_stop DOUBLE\n");
+						#endif
+
+						prog.execute(ROS_KILL);
+						printf("kill ROS\n");
 						#endif
 						break;
 					case LONG:
+						#if 1
+						printf("valueInput.sw_stop LONG\n");
+						#endif
+						break;
+					case VERYLONG:
+						shutdown = true;
+						#if 1
+						printf("valueInput.sw_stop VERYLONG\n");
+						#endif
+						break;
+					case ULTRALONG:
+						#if 1
+						printf("valueInput.sw_stop ULTRALONG\n");
+						#endif
 						break;
 					default:
 						break;

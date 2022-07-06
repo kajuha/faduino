@@ -92,6 +92,8 @@ class MultiButton {
         case StateDoubleClick:         next = _checkDoubleClick(pressed, diff);         break;
         case StateLongClick:           next = _checkLongClick(pressed, diff);           break;
         case StateOtherUp:             next = _checkOtherUp(pressed, diff);             break;
+        case StateVeryLongClick:       next = _checkVeryLongClick(pressed, diff);       break;
+        case StateUltraLongClick:      next = _checkUltraLongClick(pressed, diff);      break;
       }
 
       if (next != _state) {
@@ -137,6 +139,20 @@ class MultiButton {
     }
 
     /**
+     * True when a Long click is detected.
+     */
+    bool isVeryLongClick() {
+      return _new && _state == StateVeryLongClick;
+    }
+
+    /**
+     * True when a Long click is detected.
+     */
+    bool isUltraLongClick() {
+      return _new && _state == StateUltraLongClick;
+    }
+
+    /**
      * True once the button is released after Click, Long click or Double click.
      *
      * Note: there is no release event after a Single click, because that is a
@@ -147,9 +163,11 @@ class MultiButton {
     }
 
   private:
-    static const int DEBOUNCE_DELAY    =  20; // ms
+    static const int DEBOUNCE_DELAY =  20; // ms
     static const int SINGLECLICK_DELAY = 250; // ms
-    static const int LONGCLICK_DELAY   = 300; // ms
+    static const int LONGCLICK_DELAY = 300; // ms
+    static const int VERYLONGCLICK_DELAY = 5000; // ms
+    static const int ULTRALONGCLICK_DELAY = 5000; // ms
 
     /**
      * Note:
@@ -219,6 +237,8 @@ class MultiButton {
       StateDoubleClick,
       StateLongClick,
       StateOtherUp,
+      StateVeryLongClick,
+      StateUltraLongClick,
     };
 
     unsigned int _lastTransition;
@@ -302,6 +322,10 @@ class MultiButton {
       if (!pressed) {
         return StateOtherUp;
       }
+      
+      if (diff >= VERYLONGCLICK_DELAY) {
+        return StateVeryLongClick;
+      }
       return StateLongClick;
     }
 
@@ -309,5 +333,25 @@ class MultiButton {
       (void)pressed;
       (void)diff;
       return StateIdle;
+    }
+
+    State _checkVeryLongClick(bool pressed, int diff) {
+      (void)diff;
+      if (!pressed) {
+        return StateOtherUp;
+      }
+      
+      if (diff >= ULTRALONGCLICK_DELAY) {
+        return StateUltraLongClick;
+      }
+      return StateVeryLongClick;
+    }
+
+    State _checkUltraLongClick(bool pressed, int diff) {
+      (void)diff;
+      if (!pressed) {
+        return StateOtherUp;
+      }
+      return StateUltraLongClick;
     }
 };

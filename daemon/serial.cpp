@@ -350,10 +350,10 @@ void Faduino::checksumFaduinoState(unsigned char* packet) {
 				#endif
 
 				#if 1
-				printf("type:%d, ts:%d, ",
-					packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
-				printf("estop_l:%d, estop_r:%d, sw_green:%d, sw_red:%d, sw_stop:%d\n",
-					valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red, valueInput.sw_stop);
+				printf("type:%d, ",
+					packet[IDX_TYPE]);
+				printf("estop_l:%d, estop_r:%d, sw_green:%d, sw_red:%d, sw_stop:%d, ts:%d\n",
+					valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red, valueInput.sw_stop, *((int*)(packet+IDX_TS)));
 				#endif
 				break;
 			case TYPE_CMD::SENSOR:

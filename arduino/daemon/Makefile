@@ -1,5 +1,5 @@
 ARDUINO_TYPE=arduino:avr:mega
-PORT=/dev/ttyUSB0
+PORT=/dev/recipe.safety.faduino.dev
 
 compile:
 	arduino-cli compile --fqbn ${ARDUINO_TYPE} daemon
