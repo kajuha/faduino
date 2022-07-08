@@ -454,7 +454,7 @@ int main(int argc, char* argv[]) {
 				case 0:
 					valueOutput.buzzer.onTime = 1000;
 					valueOutput.buzzer.offTime = 1000;
-					valueOutput.buzzer.targetCount = STATE_ACT::T10;
+					valueOutput.buzzer.targetCount = STATE_ACT::T3;
 					valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
 					valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
 					valueOutput.led_start.onTime = 0;
