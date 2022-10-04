@@ -10,14 +10,14 @@
 
 #define BAUDRATE 115200
 
-#define BREAK_MAGIC 0x55AA
+#define MD_MAGIC 0x55AA
+#define RELAY_MAGIC 0x55AA
 
 #pragma pack(push, 1)
 typedef struct _ValueInput {
-  uint16_t estop_l;
-  uint16_t estop_r;
-  uint16_t sw_green;
-  uint16_t sw_red;
+  uint16_t estop_fr;
+  uint16_t estop_bl;
+  uint16_t sw_start;
   uint16_t sw_stop;
 } ValueInput;
 
@@ -31,12 +31,12 @@ typedef struct _TimeOnOff {
 } TimeOnOff;
 
 typedef struct _ValueOutput {
-  TimeOnOff led_green;
-  TimeOnOff led_red;
   TimeOnOff buzzer;
+  TimeOnOff md_power;
+  TimeOnOff md_estop;
   TimeOnOff led_start;
   TimeOnOff led_stop;
-  TimeOnOff rel_break;
+  TimeOnOff bat_relay;
 } ValueOutput;
 #pragma pack(pop)
 
@@ -45,7 +45,7 @@ typedef struct _ValueOutput {
 #define SIZE_HEAD   1
 #define SIZE_TYPE   1
 #define SIZE_TS     4
-#define SIZE_DATA_INPUT   5
+#define SIZE_DATA_INPUT   4
 #define SIZE_DATA_OUTPUT  60
 #define SIZE_CRC16  4
 #define SIZE_TAIL   1

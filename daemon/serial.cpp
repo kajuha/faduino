@@ -148,18 +148,18 @@ bool Faduino::sendFaduinoCmd(ValueOutput valueOutput) {
 	printf("\n");
 	#endif
 	printf("TS(us): %d\n", *((uint32_t*)(serialBufferTx+IDX_TS)));
-	printf("led_green(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
-		valueOutput.led_green.onTime, valueOutput.led_green.offTime,
-		valueOutput.led_green.targetCount, valueOutput.led_green.lastState,
-		valueOutput.led_green.update, valueOutput.led_green.order);
-	printf("led_red  (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
-		valueOutput.led_red.onTime, valueOutput.led_red.offTime,
-		valueOutput.led_red.targetCount, valueOutput.led_red.lastState,
-		valueOutput.led_red.update, valueOutput.led_red.order);
 	printf("buzzer   (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.buzzer.onTime, valueOutput.buzzer.offTime,
 		valueOutput.buzzer.targetCount, valueOutput.buzzer.lastState,
 		valueOutput.buzzer.update, valueOutput.buzzer.order);
+	printf("md_power (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+		valueOutput.md_power.onTime, valueOutput.md_power.offTime,
+		valueOutput.md_power.targetCount, valueOutput.md_power.lastState,
+		valueOutput.md_power.update, valueOutput.md_power.order);
+	printf("md_estop (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+		valueOutput.md_estop.onTime, valueOutput.md_estop.offTime,
+		valueOutput.md_estop.targetCount, valueOutput.md_estop.lastState,
+		valueOutput.md_estop.update, valueOutput.md_estop.order);
 	printf("led_start(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.led_start.onTime, valueOutput.led_start.offTime,
 		valueOutput.led_start.targetCount, valueOutput.led_start.lastState,
@@ -168,10 +168,10 @@ bool Faduino::sendFaduinoCmd(ValueOutput valueOutput) {
 		valueOutput.led_stop.onTime, valueOutput.led_stop.offTime,
 		valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState,
 		valueOutput.led_stop.update, valueOutput.led_stop.order);
-	printf("rel_break(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
-		valueOutput.rel_break.onTime, valueOutput.rel_break.offTime,
-		valueOutput.rel_break.targetCount, valueOutput.rel_break.lastState,
-		valueOutput.rel_break.update, valueOutput.rel_break.order);
+	printf("bat_relay(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+		valueOutput.bat_relay.onTime, valueOutput.bat_relay.offTime,
+		valueOutput.bat_relay.targetCount, valueOutput.bat_relay.lastState,
+		valueOutput.bat_relay.update, valueOutput.bat_relay.order);
 	#endif
 
 	return true;
@@ -305,15 +305,15 @@ void Faduino::checksumFaduinoState(unsigned char* packet) {
 	if (crc16out == crc16) {
 		switch (packet[IDX_TYPE]) {
 			case TYPE_CMD::CMD:
-				sscanf((const char*)(packet+IDX_DATA), "%01hd%01hd%01hd%01hd%01hd",
-					&valueInput.estop_l, &valueInput.estop_r, &valueInput.sw_green, &valueInput.sw_red, &valueInput.sw_stop);
+				sscanf((const char*)(packet+IDX_DATA), "%01hd%01hd%01hd%01hd",
+					&valueInput.estop_fr, &valueInput.estop_bl, &valueInput.sw_start, &valueInput.sw_stop);
 
 				queFaduinoState.push(valueInput);
 
 				#if 0
 				printf("type:%d, ts:%d\n",
 					packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
-				switch (valueInput.estop_l) {
+				switch (valueInput.estop_fr) {
 					case PUSHED:
 					case RELEASED:
 					case DOUBLE:
@@ -321,7 +321,7 @@ void Faduino::checksumFaduinoState(unsigned char* packet) {
 					default:
 						break;
 				}
-				switch (valueInput.estop_r) {
+				switch (valueInput.estop_bl) {
 					case PUSHED:
 					case RELEASED:
 					case DOUBLE:
@@ -329,16 +329,7 @@ void Faduino::checksumFaduinoState(unsigned char* packet) {
 					default:
 						break;
 				}
-				switch (valueInput.sw_green) {
-					case PUSHED:
-					case RELEASED:
-					case DOUBLE:
-					case LONG:
-						break;
-					default:
-						break;
-				}
-				switch (valueInput.sw_red) {
+				switch (valueInput.sw_start) {
 					case PUSHED:
 					case RELEASED:
 					case DOUBLE:
@@ -352,8 +343,8 @@ void Faduino::checksumFaduinoState(unsigned char* packet) {
 				#if 1
 				printf("type:%d, ",
 					packet[IDX_TYPE]);
-				printf("estop_l:%d, estop_r:%d, sw_green:%d, sw_red:%d, sw_stop:%d, ts:%d\n",
-					valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red, valueInput.sw_stop, *((int*)(packet+IDX_TS)));
+				printf("estop_fr:%d, estop_bl:%d, sw_start:%d, sw_stop:%d, ts:%d\n",
+					valueInput.estop_fr, valueInput.estop_bl, valueInput.sw_start, valueInput.sw_stop, *((int*)(packet+IDX_TS)));
 				#endif
 				break;
 			case TYPE_CMD::SENSOR:

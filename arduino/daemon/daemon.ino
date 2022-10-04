@@ -5,26 +5,18 @@
 
 // 출력(릴레이)핀 및 종류
 #define PIN_OUTPUT_SW_PC 22
-#define PIN_OUTPUT_BUZZER 23 // wire(white)
-#define PIN_OUTPUT_LED_GREEN 24 // wire(yellow)
-#define PIN_OUTPUT_LED_RED 25 // wire(purple)
+#define PIN_OUTPUT_BUZZER 23
+#define PIN_OUTPUT_MD_POWER 24
+#define PIN_OUTPUT_MD_ESTOP 25
 #define PIN_OUTPUT_LED_START 26
 #define PIN_OUTPUT_LED_STOP 27
-#define PIN_OUTPUT_REL_BREAK 28
+#define PIN_OUTPUT_BAT_RELAY 28
 
 // 입력핀 및 종류
-#define PIN_INPUT_ESTOP_L 30 // wire(black)
-#define PIN_INPUT_ESTOP_R 31 // wire(green)
-#define PIN_INPUT_SW_GREEN 32 // wire(gray)
-#define PIN_INPUT_SW_RED 33 // wire(brown)
-#define PIN_INPUT_SW_STOP 34 // NC(normal close) 버튼
-#define SW_STOP_ERROR 0 // 측정시 0.2V의 플로팅된 전압이 생겼음, 이로인해 부팅시 STOP 버튼이 동작됨
-
-#define PIN_INPUT_CURRENT A4
-
-#define CURRENT_VOLTAGE 5.0
-#define MAX_VOLTAGE 10.0
-#define MAX_STEP 1024.0
+#define PIN_INPUT_ESTOP_FR 30
+#define PIN_INPUT_ESTOP_BL 31
+#define PIN_INPUT_SW_START 34
+#define PIN_INPUT_SW_STOP 35
 
 // 상위 제어기에서 송수신되는 입출력값 및 이전값
 ValueInput valueInput, valueInputBefore;
@@ -37,25 +29,21 @@ unsigned long ts_bootup_start;
 unsigned long ts_now;
 
 // 입력핀 변수(클래스)(더블클릭 및 롱클릭 등 감지)
-PinButton swGreen(PIN_INPUT_SW_GREEN, INPUT);
-PinButton swRed(PIN_INPUT_SW_RED, INPUT);
-#if SW_STOP_ERROR
+PinButton swStart(PIN_INPUT_SW_START, INPUT_PULLUP);
 PinButton swStop(PIN_INPUT_SW_STOP, INPUT_PULLUP);
-#endif
 
 // 출력핀 변수(클래스)(블링크 및 온오프 등 출력)
-Flasher swPc(PIN_OUTPUT_SW_PC, 0, 0, INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-Flasher buzzer(PIN_OUTPUT_BUZZER, 0, 0, INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-Flasher ledStart(PIN_OUTPUT_LED_START, 0, 0, INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-Flasher ledGreen(PIN_OUTPUT_LED_GREEN, 0, 0, INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-Flasher ledStop(PIN_OUTPUT_LED_STOP, 0, 0, INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-Flasher ledRed(PIN_OUTPUT_LED_RED, 0, 0, INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-Flasher relBreak(PIN_OUTPUT_REL_BREAK, 0, 0, INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher swPc(PIN_OUTPUT_SW_PC, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher buzzer(PIN_OUTPUT_BUZZER, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher mdPower(PIN_OUTPUT_MD_POWER, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher mdEstop(PIN_OUTPUT_MD_ESTOP, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher ledStart(PIN_OUTPUT_LED_START, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher ledStop(PIN_OUTPUT_LED_STOP, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher batRelay(PIN_OUTPUT_BAT_RELAY, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
 
-int stateEstopL;
-int stateEstopR;
+int stateEstopFR;
+int stateEstopBL;
 
-int currentValue;
 static char buffer[BUFSIZ];
 
 unsigned long us_now, us_pre;
@@ -65,25 +53,22 @@ void setup() {
   Serial1.begin(BAUDRATE);
 
   // 입력핀(비상스위치) 설정
-  pinMode(PIN_INPUT_ESTOP_L, INPUT);
-  pinMode(PIN_INPUT_ESTOP_R, INPUT);
-  swGreen.update();
-  #if SW_STOP_ERROR
+  pinMode(PIN_INPUT_ESTOP_FR, INPUT);
+  pinMode(PIN_INPUT_ESTOP_BL, INPUT);
+  swStart.update();
   swStop.update();
-  #endif
-  swRed.update();
 
   us_now = us_pre = millis();
   
   // 출력핀 설정
   swPc.setOnOffTime(BOOT_SW_MSEC, 1000, STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
   buzzer.setOnOffTime(200, 200, STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+  mdPower.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+  mdEstop.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
   ledStart.setOnOffTime(500, 500, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-  ledGreen.setOnOffTime(500, 500, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
   ledStop.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-  ledRed.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-  relBreak.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::ON, FADUINO::ORDER::ON_FIRST);
-  relBreak.update();
+  batRelay.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::ON, FADUINO::ORDER::ON_FIRST);
+  batRelay.update();
   ts_now = millis();
   ts_bootup_start = ts_now;
 }
@@ -93,24 +78,19 @@ void loop() {
   ts_now = millis();
 
   // 입력핀 상태(더블클릭, 롱클릭 등) 처리
-  swGreen.update();
-  #if SW_STOP_ERROR
+  swStart.update();
   swStop.update();
-  #endif
-  swRed.update();
-  currentValue = analogRead(PIN_INPUT_CURRENT);
 
   // 어떤 클릭인지 확인
-  if (swGreen.isDoubleClick()) {
-    valueInput.sw_green = STATE_INPUT::DOUBLE;
-  } else if (swGreen.isLongClick()) {
-    valueInput.sw_green = STATE_INPUT::LONG;
+  if (swStart.isDoubleClick()) {
+    valueInput.sw_start = STATE_INPUT::DOUBLE;
+  } else if (swStart.isLongClick()) {
+    valueInput.sw_start = STATE_INPUT::LONG;
   } else {
-    valueInput.sw_green = STATE_INPUT::RELEASED;
+    valueInput.sw_start = STATE_INPUT::RELEASED;
   }
   
   // 어떤 클릭인지 확인
-  #if SW_STOP_ERROR
   if (swStop.isDoubleClick()) {
     valueInput.sw_stop = STATE_INPUT::DOUBLE;
   } else if (swStop.isLongClick()) {
@@ -118,59 +98,33 @@ void loop() {
 
     buzzer.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
     ledStart.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-    ledGreen.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
     ledStop.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::ON, FADUINO::ORDER::ON_FIRST);
-    ledRed.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::ON, FADUINO::ORDER::ON_FIRST);
   } else if (swStop.isVeryLongClick()) {
     valueInput.sw_stop = STATE_INPUT::VERYLONG;
   } else if (swStop.isUltraLongClick()) {
     valueInput.sw_stop = STATE_INPUT::ULTRALONG;
 
-    buzzer.setOnOffTime(500, 500, STATE_ACT::T5, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+    TimeOnOff buzzerTime;
+    buzzerTime.onTime = 500;
+    buzzerTime.offTime = 500;
+    buzzerTime.targetCount = STATE_ACT::T5;
+    buzzer.setOnOffTime(buzzerTime.onTime, buzzerTime.offTime, buzzerTime.targetCount, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+    mdPower.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+    mdEstop.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
     ledStart.setOnOffTime(1000, 1000, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-    ledGreen.setOnOffTime(1000, 1000, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
     ledStop.setOnOffTime(1000, 1000, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-    ledRed.setOnOffTime(1000, 1000, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
 
-    relBreak.setOnOffTime((500+500)*(5+1), 1000, STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+    batRelay.setOnOffTime((buzzerTime.onTime+buzzerTime.offTime)*(buzzerTime.targetCount+1), (buzzerTime.onTime+buzzerTime.offTime), STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
   } else {
     valueInput.sw_stop = STATE_INPUT::RELEASED;
   }
-  #endif
-  
-  // 어떤 클릭인지 확인
-  if (swRed.isDoubleClick()) {
-    valueInput.sw_red = STATE_INPUT::DOUBLE;
-  } else if (swRed.isLongClick()) {
-    valueInput.sw_red = STATE_INPUT::LONG;
-
-    buzzer.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-    ledStart.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-    ledGreen.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-    ledStop.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::ON, FADUINO::ORDER::ON_FIRST);
-    ledRed.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::ON, FADUINO::ORDER::ON_FIRST);
-  } else if (swRed.isVeryLongClick()) {
-    valueInput.sw_red = STATE_INPUT::VERYLONG;
-  } else if (swRed.isUltraLongClick()) {
-    valueInput.sw_red = STATE_INPUT::ULTRALONG;
-
-    buzzer.setOnOffTime(500, 500, STATE_ACT::T5, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-    ledStart.setOnOffTime(1000, 1000, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-    ledGreen.setOnOffTime(1000, 1000, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-    ledStop.setOnOffTime(1000, 1000, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-    ledRed.setOnOffTime(1000, 1000, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-
-    relBreak.setOnOffTime((500+500)*(5+1), 1000, STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-  } else {
-    valueInput.sw_red = STATE_INPUT::RELEASED;
-  }
   
   // 비상스위치 눌렸는지 확인
-  if (digitalRead(PIN_INPUT_ESTOP_L)) {
-    switch (stateEstopL) {
+  if (digitalRead(PIN_INPUT_ESTOP_FR)) {
+    switch (stateEstopFR) {
       case STATE_ESTOP::ACTION:
-        valueInput.estop_l = STATE_INPUT::PUSHED;
-        stateEstopL = 1;
+        valueInput.estop_fr = STATE_INPUT::PUSHED;
+        stateEstopFR = 1;
         break;
       case STATE_ESTOP::IDLE:
         break;
@@ -178,16 +132,16 @@ void loop() {
         break;
     }
   } else {
-    valueInput.estop_l = STATE_INPUT::RELEASED;
-    stateEstopL = STATE_ESTOP::ACTION;
+    valueInput.estop_fr = STATE_INPUT::RELEASED;
+    stateEstopFR = STATE_ESTOP::ACTION;
   }
   
   // 비상스위치 눌렸는지 확인
-  if (digitalRead(PIN_INPUT_ESTOP_R)) {
-    switch (stateEstopR) {
+  if (digitalRead(PIN_INPUT_ESTOP_BL)) {
+    switch (stateEstopBL) {
       case STATE_ESTOP::ACTION:
-        valueInput.estop_r = STATE_INPUT::PUSHED;
-        stateEstopR = 1;
+        valueInput.estop_bl = STATE_INPUT::PUSHED;
+        stateEstopBL = 1;
         break;
       case STATE_ESTOP::IDLE:
         break;
@@ -195,12 +149,12 @@ void loop() {
         break;
     }
   } else {
-    valueInput.estop_r = STATE_INPUT::RELEASED;
-    stateEstopR = STATE_ESTOP::ACTION;
+    valueInput.estop_bl = STATE_INPUT::RELEASED;
+    stateEstopBL = STATE_ESTOP::ACTION;
   }
 
   // 입력핀에 대한 처리
-  if (valueInput.sw_green == STATE_INPUT::LONG) {
+  if (valueInput.sw_start == STATE_INPUT::LONG) {
     // 부팅된 상태인가?
     if (false) {
       // 아무것도 하지 않음
@@ -219,18 +173,17 @@ void loop() {
   }
 
   // 송신 데이터 처리(이전과 상태변화가 달라졌으면 입력핀 상태 송신)
-  if (valueInputBefore.sw_green != valueInput.sw_green ||
-      valueInputBefore.sw_stop != valueInput.sw_stop ||
-      valueInputBefore.sw_red != valueInput.sw_red ||
-      valueInputBefore.estop_l != valueInput.estop_l ||
-      valueInputBefore.estop_r != valueInput.estop_r) {
+  if (valueInputBefore.estop_fr != valueInput.estop_fr ||
+      valueInputBefore.estop_bl != valueInput.estop_bl ||
+      valueInputBefore.sw_start != valueInput.sw_start ||
+      valueInputBefore.sw_stop != valueInput.sw_stop) {
     valueInputBefore = valueInput;
 
     // 송신 포맷 생성
     buffer[IDX_HEAD] = DATA_HEAD;
     buffer[IDX_TYPE] = TYPE_CMD::CMD;
     *((unsigned long*)(buffer+IDX_TS)) = micros();
-    sprintf(buffer+IDX_DATA, "%01d%01d%01d%01d%01d", valueInput.estop_l, valueInput.estop_r, valueInput.sw_green, valueInput.sw_red, valueInput.sw_stop);
+    sprintf(buffer+IDX_DATA, "%01d%01d%01d%01d", valueInput.estop_fr, valueInput.estop_bl, valueInput.sw_start, valueInput.sw_stop);
     // crc16 계산
     unsigned short crc16in = CRC::CRC16((unsigned char*)(buffer+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
     sprintf(buffer+IDX_CRC16_INPUT, "%04x", crc16in);
@@ -251,9 +204,10 @@ void loop() {
 
     // 송신 포맷 생성
     buffer[IDX_HEAD] = DATA_HEAD;
-    buffer[IDX_TYPE] = TYPE_CMD::SENSOR;
+    buffer[IDX_TYPE] = TYPE_CMD::HB;
     *((unsigned long*)(buffer+IDX_TS)) = micros();
-    sprintf(buffer+IDX_DATA, "%05d", currentValue);
+    int dummy = 0;
+    sprintf(buffer+IDX_DATA, "%04d", dummy);
     // crc16 계산
     unsigned short crc16in = CRC::CRC16((unsigned char*)(buffer+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
     sprintf(buffer+IDX_CRC16_INPUT, "%04x", crc16in);
@@ -270,11 +224,11 @@ void loop() {
   // 출력 처리
   swPc.update();
   buzzer.update();
+  mdPower.update();
+  mdEstop.update();
   ledStart.update();
-  ledGreen.update();
   ledStop.update();
-  ledRed.update();
-  relBreak.update();
+  batRelay.update();
 }
 
 bool parseData() {
@@ -397,11 +351,11 @@ void checksumData(unsigned char* packet)
       case TYPE_CMD::CMD:
         memcpy(&valueOutput, packet+IDX_DATA, SIZE_DATA_OUTPUT);
         if (valueOutput.buzzer.update) buzzer.setOnOffTime(valueOutput.buzzer.onTime, valueOutput.buzzer.offTime, valueOutput.buzzer.targetCount, valueOutput.buzzer.lastState, valueOutput.buzzer.order);
+        if (valueOutput.md_power.update == MD_MAGIC) mdPower.setOnOffTime(valueOutput.md_power.onTime, valueOutput.md_power.offTime, valueOutput.md_power.targetCount, valueOutput.md_power.lastState, valueOutput.md_power.order);
+        if (valueOutput.md_estop.update == MD_MAGIC) mdEstop.setOnOffTime(valueOutput.md_estop.onTime, valueOutput.md_estop.offTime, valueOutput.md_estop.targetCount, valueOutput.md_estop.lastState, valueOutput.md_estop.order);
         if (valueOutput.led_start.update) ledStart.setOnOffTime(valueOutput.led_start.onTime, valueOutput.led_start.offTime, valueOutput.led_start.targetCount, valueOutput.led_start.lastState, valueOutput.led_start.order);
-        if (valueOutput.led_green.update) ledGreen.setOnOffTime(valueOutput.led_green.onTime, valueOutput.led_green.offTime, valueOutput.led_green.targetCount, valueOutput.led_green.lastState, valueOutput.led_green.order);
         if (valueOutput.led_stop.update) ledStop.setOnOffTime(valueOutput.led_stop.onTime, valueOutput.led_stop.offTime, valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState, valueOutput.led_stop.order);
-        if (valueOutput.led_red.update) ledRed.setOnOffTime(valueOutput.led_red.onTime, valueOutput.led_red.offTime, valueOutput.led_red.targetCount, valueOutput.led_red.lastState, valueOutput.led_red.order);
-        if (valueOutput.rel_break.update == BREAK_MAGIC) relBreak.setOnOffTime(valueOutput.rel_break.onTime, valueOutput.rel_break.offTime, valueOutput.rel_break.targetCount, valueOutput.rel_break.lastState, valueOutput.rel_break.order);
+        if (valueOutput.bat_relay.update == RELAY_MAGIC) batRelay.setOnOffTime(valueOutput.bat_relay.onTime, valueOutput.bat_relay.offTime, valueOutput.bat_relay.targetCount, valueOutput.bat_relay.lastState, valueOutput.bat_relay.order);
         break;
       case TYPE_CMD::HB:
         break;

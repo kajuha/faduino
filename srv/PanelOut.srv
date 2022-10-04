@@ -1,8 +1,8 @@
-TimeOnOff led_green
-TimeOnOff led_red
 TimeOnOff buzzer
+TimeOnOff md_power
+TimeOnOff md_estop
 TimeOnOff led_start
 TimeOnOff led_stop
-TimeOnOff rel_break
+TimeOnOff bat_relay
 ---
 bool success

@@ -21,18 +21,18 @@ std::queue<ValueOutput> queValueOutput;
 bool servicePanelOutCallback(faduino::PanelOut::Request &req, faduino::PanelOut::Response &res) {
     static ValueOutput srvValueOutput;
     #if 0
-    printf("[req:led_green] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
-        req.led_green.onTime, req.led_green.offTime, req.led_green.targetCount, req.led_green.lastState, req.led_green.update, req.led_green.order);
-    printf("[req:led_red  ] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
-        req.led_red.onTime, req.led_red.offTime, req.led_red.targetCount, req.led_red.lastState, req.led_red.update, req.led_red.order);
     printf("[req:buzzer   ] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
         req.buzzer.onTime, req.buzzer.offTime, req.buzzer.targetCount, req.buzzer.lastState, req.buzzer.update, req.buzzer.order);
+    printf("[req:md_power ] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
+        req.md_power.onTime, req.md_power.offTime, req.md_power.targetCount, req.md_power.lastState, req.md_power.update, req.md_power.order);
+    printf("[req:md_estop ] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
+        req.md_estop.onTime, req.md_estop.offTime, req.md_estop.targetCount, req.md_estop.lastState, req.md_estop.update, req.md_estop.order);
     printf("[req:led_start] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
         req.led_start.onTime, req.led_start.offTime, req.led_start.targetCount, req.led_start.lastState, req.led_start.update, req.led_start.order);
     printf("[req:led_stop ] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
         req.led_stop.onTime, req.led_stop.offTime, req.led_stop.targetCount, req.led_stop.lastState, req.led_stop.update, req.led_stop.order);
-    printf("[req:rel_break] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
-        req.rel_break.onTime, req.rel_break.offTime, req.rel_break.targetCount, req.rel_break.lastState, req.rel_break.update, req.rel_break.order);
+    printf("[req:bat_relay] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
+        req.bat_relay.onTime, req.bat_relay.offTime, req.bat_relay.targetCount, req.bat_relay.lastState, req.bat_relay.update, req.bat_relay.order);
     #endif
 
     #if 0
@@ -44,18 +44,18 @@ bool servicePanelOutCallback(faduino::PanelOut::Request &req, faduino::PanelOut:
     queValueOutput.push(srvValueOutput);
 
     #if 1
-    printf("[srv:led_green] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
-        srvValueOutput.led_green.onTime, srvValueOutput.led_green.offTime, srvValueOutput.led_green.targetCount, srvValueOutput.led_green.lastState, srvValueOutput.led_green.update, srvValueOutput.led_green.order);
-    printf("[srv:led_red  ] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
-        srvValueOutput.led_red.onTime, srvValueOutput.led_red.offTime, srvValueOutput.led_red.targetCount, srvValueOutput.led_red.lastState, srvValueOutput.led_red.update, srvValueOutput.led_red.order);
     printf("[srv:buzzer   ] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
         srvValueOutput.buzzer.onTime, srvValueOutput.buzzer.offTime, srvValueOutput.buzzer.targetCount, srvValueOutput.buzzer.lastState, srvValueOutput.buzzer.update, srvValueOutput.buzzer.order);
+    printf("[srv:md_power ] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
+        srvValueOutput.md_power.onTime, srvValueOutput.md_power.offTime, srvValueOutput.md_power.targetCount, srvValueOutput.md_power.lastState, srvValueOutput.md_power.update, srvValueOutput.md_power.order);
+    printf("[srv:md_estop ] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
+        srvValueOutput.md_estop.onTime, srvValueOutput.md_estop.offTime, srvValueOutput.md_estop.targetCount, srvValueOutput.md_estop.lastState, srvValueOutput.md_estop.update, srvValueOutput.md_estop.order);
     printf("[srv:led_start] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
         srvValueOutput.led_start.onTime, srvValueOutput.led_start.offTime, srvValueOutput.led_start.targetCount, srvValueOutput.led_start.lastState, srvValueOutput.led_start.update, srvValueOutput.led_start.order);
     printf("[srv:led_stop ] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
         srvValueOutput.led_stop.onTime, srvValueOutput.led_stop.offTime, srvValueOutput.led_stop.targetCount, srvValueOutput.led_stop.lastState, srvValueOutput.led_stop.update, srvValueOutput.led_stop.order);
-    printf("[srv:rel_break] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
-        srvValueOutput.rel_break.onTime, srvValueOutput.rel_break.offTime, srvValueOutput.rel_break.targetCount, srvValueOutput.rel_break.lastState, srvValueOutput.rel_break.update, srvValueOutput.rel_break.order);
+    printf("[srv:bat_relay] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
+        srvValueOutput.bat_relay.onTime, srvValueOutput.bat_relay.offTime, srvValueOutput.bat_relay.targetCount, srvValueOutput.bat_relay.lastState, srvValueOutput.bat_relay.update, srvValueOutput.bat_relay.order);
     #endif
     
 #define SRV_SUCCESS	true
