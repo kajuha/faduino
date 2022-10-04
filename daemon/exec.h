@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <boost/thread.hpp>
 	
-#define ROS_RUN "roslaunch recipelab pallete_can.launch"
+#define ROS_RUN "roslaunch recipelab pallete.launch"
 #define ROS_CHECK "ps -ef|grep 'rosmaster'|grep -v 'grep'|awk '{print $2}'"
 #define ROS_KILL "kill `ps -ef|grep 'rosmaster'|grep -v 'grep'|awk '{print $2}'`"
 #define AMR_OFF "sudo shutdown -h now"
