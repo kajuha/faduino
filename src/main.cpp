@@ -14,7 +14,7 @@
 
 #include "faduino/main.h"
 
-#include "../arduino/daemon/protocol_serial.h"
+#include "../arduino/daemon/include/protocol_serial.h"
 
 std::queue<ValueOutput> queValueOutput;
 
