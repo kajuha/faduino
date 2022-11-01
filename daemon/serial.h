@@ -3,7 +3,7 @@
 #include <string>
 #include <queue>
 
-#include "../arduino/daemon/protocol_serial.h"
+#include "../arduino/daemon/include/protocol_serial.h"
 
 class Faduino {
 public:

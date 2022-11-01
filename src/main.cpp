@@ -157,6 +157,7 @@ void fThread(std::string host_name, int tcp_port) {
         ts_now = (time_now.tv_sec * 1000) + (time_now.tv_usec / 1000);
 
         uint8_t recvBuffer[BUFSIZ] = {'\0', };
+        queValueOutput = std::queue<ValueOutput>();
 
         printf("[c] readWriteInfinite while start (%d line)\n", __LINE__);
         while (readWriteInfinite) {

@@ -292,6 +292,7 @@ void fThread(int* tcpPort, bool* isSerial) {
 		#endif
 
         uint8_t recvBuffer[BUFSIZ] = {'\0', };
+		queTcpRx = std::queue<unsigned char>();
 
         printf("[s] readWriteInfinite while start (%d line)\n", __LINE__);
         while (readWriteInfinite) {
