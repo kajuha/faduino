@@ -19,7 +19,7 @@
 #define PIN_INPUT_ESTOP_BL 22
 #define PIN_INPUT_SW_START 26
 #define PIN_INPUT_SW_STOP 27
-#define PIN_INPUT_SPARE1 24
+#define PIN_INPUT_SW_BUMPER 24
 #define PIN_INPUT_SPARE2 25
 
 
@@ -38,6 +38,7 @@ unsigned long ts_now;
 // 입력핀 변수(클래스)(더블클릭 및 롱클릭 등 감지)
 PinButton swStart(PIN_INPUT_SW_START, INPUT);
 PinButton swStop(PIN_INPUT_SW_STOP, INPUT);
+PinButton swBumper(PIN_INPUT_SW_BUMPER, INPUT);
 
 // 출력핀 변수(클래스)(블링크 및 온오프 등 출력)
 Flasher swPc(PIN_OUTPUT_SW_PC, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
@@ -68,6 +69,7 @@ void setup() {
   pinMode(PIN_INPUT_ESTOP_BL, INPUT_PULLUP);
   swStart.update();
   swStop.update();
+  swBumper.update();
 
   us_now = us_pre = millis();
   
@@ -91,6 +93,7 @@ void loop() {
   // 입력핀 상태(더블클릭, 롱클릭 등) 처리
   swStart.update();
   swStop.update();
+  swBumper.update();
 
   // 어떤 클릭인지 확인
   if (swStart.isDoubleClick()) {
@@ -128,6 +131,14 @@ void loop() {
     batRelay.setOnOffTime((buzzerTime.onTime+buzzerTime.offTime)*(buzzerTime.targetCount+1), (buzzerTime.onTime+buzzerTime.offTime), STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
   } else {
     valueInput.sw_stop = STATE_INPUT::RELEASED;
+  }
+  
+  // 어떤 클릭인지 확인
+  if (swBumper.isDoubleClick()) {
+  } else if (swBumper.isLongClick()) {
+  } else if (swBumper.isVeryLongClick()) {
+  } else if (swBumper.isUltraLongClick()) {
+  } else {
   }
   
   // 비상스위치 눌렸는지 확인

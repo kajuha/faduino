@@ -215,6 +215,7 @@ void fThread(std::string host_name, int tcp_port) {
                 break;
                 #endif
             } else {
+                usleep(1000);
             }
         }
         printf("[c] tcp read/write end\n");

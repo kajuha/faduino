@@ -325,6 +325,7 @@ void fThread(int* tcpPort, bool* isSerial) {
 				readWriteInfinite = 0;
 				continue;
 			} else {
+                usleep(1000);
 			}
 
 			parseTcpState();
@@ -748,14 +749,14 @@ int main(int argc, char* argv[]) {
 						valueOutput.md_estop.lastState = FADUINO::RELAY::OFF;
 						valueOutput.md_estop.order = FADUINO::ORDER::ON_FIRST;
 						valueOutput.led_start.onTime = 0;
-						valueOutput.led_start.offTime = 1000;
-						valueOutput.led_start.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_start.offTime = 0;
+						valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
 						valueOutput.led_start.lastState = FADUINO::RELAY::OFF;
 						valueOutput.led_start.order = FADUINO::ORDER::ON_FIRST;
-						valueOutput.led_stop.onTime = 1000;
+						valueOutput.led_stop.onTime = 0;
 						valueOutput.led_stop.offTime = 0;
-						valueOutput.led_stop.targetCount = STATE_ACT::INFINITE;
-						valueOutput.led_stop.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_stop.targetCount = STATE_ACT::DIRECT;
+						valueOutput.led_stop.lastState = FADUINO::RELAY::ON;
 						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
 
 						valueOutput.buzzer.update = 1;
