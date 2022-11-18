@@ -5,8 +5,8 @@ StartLimitBurst=5
 
 [Service]
 Type=simple
-WorkingDirectory=/home/kajuha/catkin_ws/src/faduino/daemon/systemd
-ExecStart=/home/kajuha/catkin_ws/src/faduino/daemon/systemd/faduinod.sh
+WorkingDirectory=/home/recipelab/catkin_ws/src/faduino/daemon/systemd
+ExecStart=/home/recipelab/catkin_ws/src/faduino/daemon/systemd/faduinod.sh
 User=root
 Group=root
 Restart=always

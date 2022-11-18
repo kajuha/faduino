@@ -14,6 +14,7 @@
 #include <sys/time.h>
 #include <ctime>
 
+#include "reprintf.h"
 #include "serial.h"
 
 ValueInput valueInput;
@@ -37,10 +38,10 @@ bool Faduino::initSerial()	{
 	const char* COMM_PORT = serialPort.c_str();
 
 	if(-1 == (fd = open(COMM_PORT, O_RDWR))) {
-		printf("error opening port\n");
-		printf("set port parameters using the following Linux command:\n");
-		printf("stty -F %s %d raw\n", COMM_PORT, baudrate);
-		printf("you may need to have ROOT access\n");
+		reprintf(ScreenOutput::ALWAYS, "error opening port\n");
+		reprintf(ScreenOutput::ALWAYS, "set port parameters using the following Linux command:\n");
+		reprintf(ScreenOutput::ALWAYS, "stty -F %s %d raw\n", COMM_PORT, baudrate);
+		reprintf(ScreenOutput::ALWAYS, "you may need to have ROOT access\n");
 		return false;
 	}
 	#else
@@ -84,7 +85,7 @@ bool Faduino::initSerial()	{
 			newtio.c_cflag = B4800;
 			break;
 		default:
-			printf("unsupported baudrate!");
+			reprintf(ScreenOutput::ALWAYS, "unsupported baudrate!");
 			exit(0);
 	}
 	newtio.c_cflag |= CS8;
@@ -104,9 +105,9 @@ bool Faduino::initSerial()	{
 	tcflush(fd, TCIOFLUSH);
 	tcsetattr(fd, TCSANOW, &newtio);
 
-	printf("faduino communication port is ready\n");
+	reprintf(ScreenOutput::ALWAYS, "faduino communication port is ready\n");
 	#else
-	printf("SERIAL DUMMY port is ready\n");
+	reprintf(ScreenOutput::ALWAYS, "SERIAL DUMMY port is ready\n");
 	#endif
 
 	return true;
@@ -115,9 +116,9 @@ bool Faduino::initSerial()	{
 void Faduino::closeSerial() {
 	#if SERIAL_EN
 	close(fd);
-	printf("closing faduino\n");
+	reprintf(ScreenOutput::ALWAYS, "closing faduino\n");
 	#else
-	printf("closing SERIAL DUMMY\n");
+	reprintf(ScreenOutput::ALWAYS, "closing SERIAL DUMMY\n");
 	#endif
 }
 
@@ -140,35 +141,35 @@ bool Faduino::sendFaduinoCmd(ValueOutput valueOutput) {
 	#if SERIAL_EN
 	write(fd, serialBufferTx, SIZE_TOTAL_OUTPUT);
 	#else
-	printf("SEND SERIAL DUMMY\n");
+	reprintf(ScreenOutput::NO, "SEND SERIAL DUMMY\n");
 	#if 0
 	for (int i=0; i<SIZE_DATA_OUTPUT; i++) {
-		printf("[%02x]", serialBufferTx[i]);
+		reprintf(ScreenOutput::NO, "[%02x]", serialBufferTx[i]);
 	}
-	printf("\n");
+	reprintf(ScreenOutput::NO, "\n");
 	#endif
-	printf("TS(us): %d\n", *((uint32_t*)(serialBufferTx+IDX_TS)));
-	printf("buzzer   (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+	reprintf(ScreenOutput::NO, "TS(us): %d\n", *((uint32_t*)(serialBufferTx+IDX_TS)));
+	reprintf(ScreenOutput::NO, "buzzer   (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.buzzer.onTime, valueOutput.buzzer.offTime,
 		valueOutput.buzzer.targetCount, valueOutput.buzzer.lastState,
 		valueOutput.buzzer.update, valueOutput.buzzer.order);
-	printf("md_power (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+	reprintf(ScreenOutput::NO, "md_power (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.md_power.onTime, valueOutput.md_power.offTime,
 		valueOutput.md_power.targetCount, valueOutput.md_power.lastState,
 		valueOutput.md_power.update, valueOutput.md_power.order);
-	printf("md_estop (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+	reprintf(ScreenOutput::NO, "md_estop (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.md_estop.onTime, valueOutput.md_estop.offTime,
 		valueOutput.md_estop.targetCount, valueOutput.md_estop.lastState,
 		valueOutput.md_estop.update, valueOutput.md_estop.order);
-	printf("led_start(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+	reprintf(ScreenOutput::NO, "led_start(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.led_start.onTime, valueOutput.led_start.offTime,
 		valueOutput.led_start.targetCount, valueOutput.led_start.lastState,
 		valueOutput.led_start.update, valueOutput.led_start.order);
-	printf("led_stop (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+	reprintf(ScreenOutput::NO, "led_stop (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.led_stop.onTime, valueOutput.led_stop.offTime,
 		valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState,
 		valueOutput.led_stop.update, valueOutput.led_stop.order);
-	printf("bat_relay(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+	reprintf(ScreenOutput::NO, "bat_relay(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.bat_relay.onTime, valueOutput.bat_relay.offTime,
 		valueOutput.bat_relay.targetCount, valueOutput.bat_relay.lastState,
 		valueOutput.bat_relay.update, valueOutput.bat_relay.order);
@@ -197,10 +198,10 @@ bool Faduino::receiveFaduinoState(bool enableParsing) {
 	} else {
 		if (queSerialRx.size()) {
 			for (int i=0; i<rx_size; i++) {
-				printf("[%02x]", queSerialRx.front());
+				reprintf(ScreenOutput::NO, "[%02x]", queSerialRx.front());
 				queSerialRx.pop();
 			}
-			printf("\n");
+			reprintf(ScreenOutput::NO, "\n");
 		}
 	}
 
@@ -218,7 +219,7 @@ bool Faduino::parseFaduinoState() {
 				if (packet[IDX_HEAD] == DATA_HEAD) {
 					state = FSM_FADUINO::TYPE;
 				} else {
-					printf("FSM_FADUINO::HEAD not Match \n");
+					reprintf(ScreenOutput::NO, "FSM_FADUINO::HEAD not Match \n");
 					state = FSM_FADUINO::HEAD;
 				}
 				queSerialRx.pop();
@@ -267,11 +268,11 @@ bool Faduino::parseFaduinoState() {
 				if (packet[IDX_TAIL_INPUT] == DATA_TAIL) {
 					state = FSM_FADUINO::OK;
 				} else {
-					printf("FSM_FADUINO::TAIL not Match\n");
+					reprintf(ScreenOutput::NO, "FSM_FADUINO::TAIL not Match\n");
 					for (int i=0; i<SIZE_TOTAL_INPUT; i++) {
-						printf("[%02x]", packet[i]);
+						reprintf(ScreenOutput::NO, "[%02x]", packet[i]);
 					}
-					printf("\n");
+					reprintf(ScreenOutput::NO, "\n");
 					state = FSM_FADUINO::HEAD;
 				}
 				queSerialRx.pop();
@@ -311,7 +312,7 @@ void Faduino::checksumFaduinoState(unsigned char* packet) {
 				queFaduinoState.push(valueInput);
 
 				#if 0
-				printf("type:%d, ts:%d\n",
+				reprintf(ScreenOutput::NO, "type:%d, ts:%d\n",
 					packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
 				switch (valueInput.estop_fr) {
 					case PUSHED:
@@ -341,9 +342,9 @@ void Faduino::checksumFaduinoState(unsigned char* packet) {
 				#endif
 
 				#if 1
-				printf("type:%d, ",
+				reprintf(ScreenOutput::NO, "type:%d, ",
 					packet[IDX_TYPE]);
-				printf("estop_fr:%d, estop_bl:%d, sw_start:%d, sw_stop:%d, ts:%d\n",
+				reprintf(ScreenOutput::NO, "estop_fr:%d, estop_bl:%d, sw_start:%d, sw_stop:%d, ts:%d\n",
 					valueInput.estop_fr, valueInput.estop_bl, valueInput.sw_start, valueInput.sw_stop, *((int*)(packet+IDX_TS)));
 				#endif
 				break;
@@ -352,16 +353,16 @@ void Faduino::checksumFaduinoState(unsigned char* packet) {
 				sscanf((const char*)(packet+IDX_DATA), "%05d", &sensorValue);
 
 				#if 1
-				printf("type:%d, ts:%d, ", packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
-				printf("sensorValue:%d\n", sensorValue);
+				reprintf(ScreenOutput::NO, "type:%d, ts:%d, ", packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
+				reprintf(ScreenOutput::NO, "sensorValue:%d\n", sensorValue);
 				#endif
 				break;
 			default:
-				printf("unknown type:%d, ts:%d\n",
+				reprintf(ScreenOutput::NO, "unknown type:%d, ts:%d\n",
 					packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
 				break;
 		}
 	} else {
-		printf("crc16 not matched !!!\n");
+		reprintf(ScreenOutput::NO, "crc16 not matched !!!\n");
 	}
 }

@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
+#include "reprintf.h"
 #include "serial.h"
 #include "exec.h"
 
@@ -25,13 +26,13 @@ int clientOpen = 1;
 
 void sigpipe_handler(int sig) {
 	// signal(SIGPIPE, sigpipe_handler);
-	printf("[s] received SIGPIPE: %d \n", sig);
+	reprintf(ScreenOutput::ALWAYS, "[s] received SIGPIPE: %d \n", sig);
 	readWriteInfinite = 0;
 }
 
 void sigint_handler(int sig) {
 	// signal(SIGINT, sigint_handler);
-	printf("[s] received SIGINT: %d \n", sig);
+	reprintf(ScreenOutput::ALWAYS, "[s] received SIGINT: %d \n", sig);
 	close(sock);
 	clientOpen = 0;
 }
@@ -52,7 +53,7 @@ void checksumTcpState(unsigned char* packet) {
 	// 수신부 crc16 문자열 추출
 	uint32_t crc16out;
 	memcpy(&crc16out, (const char*)(packet+IDX_CRC16_OUTPUT), SIZE_CRC16);
-	printf("crc16out: %x\n", crc16out);
+	reprintf(ScreenOutput::NO, "crc16out: %x\n", crc16out);
 
 	if (crc16out == 0x55AA55AA) {
 	#endif
@@ -62,28 +63,28 @@ void checksumTcpState(unsigned char* packet) {
         		memcpy(&valueOutput, packet+IDX_DATA, SIZE_DATA_OUTPUT);
 
 				#if 1
-				printf("[s] TS(us): %d\n", *((uint32_t*)(packet+IDX_TS)));
-				printf("[s] buzzer   (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+				reprintf(ScreenOutput::NO, "[s] TS(us): %d\n", *((uint32_t*)(packet+IDX_TS)));
+				reprintf(ScreenOutput::NO, "[s] buzzer   (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 					valueOutput.buzzer.onTime, valueOutput.buzzer.offTime,
 					valueOutput.buzzer.targetCount, valueOutput.buzzer.lastState,
 					valueOutput.buzzer.update, valueOutput.buzzer.order);
-				printf("[s] md_power (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+				reprintf(ScreenOutput::NO, "[s] md_power (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 					valueOutput.md_power.onTime, valueOutput.md_power.offTime,
 					valueOutput.md_power.targetCount, valueOutput.md_power.lastState,
 					valueOutput.md_power.update, valueOutput.md_power.order);
-				printf("[s] md_estop (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+				reprintf(ScreenOutput::NO, "[s] md_estop (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 					valueOutput.md_estop.onTime, valueOutput.md_estop.offTime,
 					valueOutput.md_estop.targetCount, valueOutput.md_estop.lastState,
 					valueOutput.md_estop.update, valueOutput.md_estop.order);
-				printf("[s] led_start(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+				reprintf(ScreenOutput::NO, "[s] led_start(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 					valueOutput.led_start.onTime, valueOutput.led_start.offTime,
 					valueOutput.led_start.targetCount, valueOutput.led_start.lastState,
 					valueOutput.led_start.update, valueOutput.led_start.order);
-				printf("[s] led_stop (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+				reprintf(ScreenOutput::NO, "[s] led_stop (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 					valueOutput.led_stop.onTime, valueOutput.led_stop.offTime,
 					valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState,
 					valueOutput.led_stop.update, valueOutput.led_stop.order);
-				printf("[s] bat_relay(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
+				reprintf(ScreenOutput::NO, "[s] bat_relay(on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 					valueOutput.bat_relay.onTime, valueOutput.bat_relay.offTime,
 					valueOutput.bat_relay.targetCount, valueOutput.bat_relay.lastState,
 					valueOutput.bat_relay.update, valueOutput.bat_relay.order);
@@ -92,12 +93,12 @@ void checksumTcpState(unsigned char* packet) {
 				faduino.sendFaduinoCmd(valueOutput);
 				break;
 			default:
-				printf("[s] unknown type:%d, ts:%d\n",
+				reprintf(ScreenOutput::NO, "[s] unknown type:%d, ts:%d\n",
 					packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
 				break;
 		}
 	} else {
-		printf("[s] crc16 not matched !!!\n");
+		reprintf(ScreenOutput::NO, "[s] crc16 not matched !!!\n");
 	}
 }
 
@@ -112,7 +113,7 @@ bool parseTcpState() {
 				if (packet[IDX_HEAD] == DATA_HEAD) {
 					state = FSM_FADUINO::TYPE;
 				} else {
-					printf("[s] FSM_FADUINO::HEAD not Match \n");
+					reprintf(ScreenOutput::NO, "[s] FSM_FADUINO::HEAD not Match \n");
 					state = FSM_FADUINO::HEAD;
 				}
 				queTcpRx.pop();
@@ -161,11 +162,11 @@ bool parseTcpState() {
 				if (packet[IDX_TAIL_OUTPUT] == DATA_TAIL) {
 					state = FSM_FADUINO::OK;
 				} else {
-					printf("[s] FSM_FADUINO::TAIL not Match\n");
+					reprintf(ScreenOutput::NO, "[s] FSM_FADUINO::TAIL not Match\n");
 					for (int i=0; i<SIZE_TOTAL_OUTPUT; i++) {
-						printf("[%02x]", packet[i]);
+						reprintf(ScreenOutput::NO, "[%02x]", packet[i]);
 					}
-					printf("\n");
+					reprintf(ScreenOutput::NO, "\n");
 					state = FSM_FADUINO::HEAD;
 				}
 				queTcpRx.pop();
@@ -197,25 +198,25 @@ void fThread(int* tcpPort, bool* isSerial) {
     int ret;
     int recvLen;
 
-    printf("[s] clientOpen while start (%d line)\n", __LINE__);
+    reprintf(ScreenOutput::NO, "[s] clientOpen while start (%d line)\n", __LINE__);
     while (clientOpen) {
-        printf("[s] clientOpen while started (%d line)\n", __LINE__);
+        reprintf(ScreenOutput::NO, "[s] clientOpen while started (%d line)\n", __LINE__);
 
         // 소켓 열기
         if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
             // perror("[s] socket open error, ");
-            printf("[s] socket open error\n");
+            reprintf(ScreenOutput::NO, "[s] socket open error\n");
             // return;
             continue;
         }
-        printf("[s] socket open\n");
+        reprintf(ScreenOutput::NO, "[s] socket open\n");
 
         // 소켓 설정(TCP, 포트)
         memset(&addr, 0x00, sizeof(addr));
         addr.sin_family = AF_INET;
         addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-        printf("[s] tcpPort: %d \n", *tcpPort);
+        reprintf(ScreenOutput::NO, "[s] tcpPort: %d \n", *tcpPort);
         addr.sin_port = htons(*tcpPort);
 
         // time_wait 제거하기
@@ -225,12 +226,12 @@ void fThread(int* tcpPort, bool* isSerial) {
         // 소켓 설정 등록
         if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
             // perror("[s] bind error, ");
-            printf("[s] bind error\n");
+            reprintf(ScreenOutput::NO, "[s] bind error\n");
             // return;
             usleep(500000);
             continue;
         }
-        printf("[s] bind registerd\n");
+        reprintf(ScreenOutput::NO, "[s] bind registerd\n");
 
         // 시그널 핸들러 등록
         // signal(SIGINT, sigint_handler);
@@ -247,41 +248,41 @@ void fThread(int* tcpPort, bool* isSerial) {
 
         if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
             // perror("[s] setsockopt failed, ");
-            printf("[s] setsockopt failed\n");
+            reprintf(ScreenOutput::NO, "[s] setsockopt failed\n");
         }
 
         // 연결 요청 대기
         if (listen(sock, 5) < 0) {
             // perror("[s] listen error, ");
-            printf("[s] listen error\n");
+            reprintf(ScreenOutput::NO, "[s] listen error\n");
             // return;
             usleep(500000);
             continue;
         } else {
-            printf("[s] listen\n");
+            reprintf(ScreenOutput::NO, "[s] listen\n");
         }
 
         addrLen = sizeof(clientAddr);
 
-        printf("[s] waiting for client..\n");
+        reprintf(ScreenOutput::NO, "[s] waiting for client..\n");
 
-        printf("[s] socket : %d\n", sock);
+        reprintf(ScreenOutput::NO, "[s] socket : %d\n", sock);
         // 연결 수락
         clientSock = accept(sock, (struct sockaddr *)&clientAddr, (socklen_t*)&addrLen);
         if (clientSock < 0) {
             // perror("[s] accept error, ");
-            printf("[s] accept error\n");
+            reprintf(ScreenOutput::NO, "[s] accept error\n");
             // goto PROGRAM_END;
             // return;
-            // printf("[s] socket : %d\n", sock);
-            // printf("[s] clientSock: %d\n", clientSock);
+            // reprintf(ScreenOutput::NO, "[s] socket : %d\n", sock);
+            // reprintf(ScreenOutput::NO, "[s] clientSock: %d\n", clientSock);
             close(clientSock);
             close(sock);
             usleep(500000);
             continue;
         } else {
-            printf("[s] clinet ip : %s\n", inet_ntoa(clientAddr.sin_addr));
-            printf("[s] client accept\n");
+            reprintf(ScreenOutput::ALWAYS, "[s] clinet ip : %s\n", inet_ntoa(clientAddr.sin_addr));
+            reprintf(ScreenOutput::ALWAYS, "[s] client accept\n");
         }
 
 		#if 0
@@ -294,9 +295,9 @@ void fThread(int* tcpPort, bool* isSerial) {
         uint8_t recvBuffer[BUFSIZ] = {'\0', };
 		queTcpRx = std::queue<unsigned char>();
 
-        printf("[s] readWriteInfinite while start (%d line)\n", __LINE__);
+        reprintf(ScreenOutput::NO, "[s] readWriteInfinite while start (%d line)\n", __LINE__);
         while (readWriteInfinite) {
-            // printf("[s] readWriteInfinite while started (%d line)\n", __LINE__);
+            // reprintf(ScreenOutput::NO, "[s] readWriteInfinite while started (%d line)\n", __LINE__);
 
 			recvLen = recv(clientSock, recvBuffer, BUFSIZ, MSG_PEEK|MSG_DONTWAIT);
 			if (recvLen > 0) {
@@ -307,11 +308,11 @@ void fThread(int* tcpPort, bool* isSerial) {
 					queTcpRx.push(recvBuffer[i]);
 				}
 				#if 1
-				printf("recvLen: %d ", recvLen);
+				reprintf(ScreenOutput::NO, "recvLen: %d ", recvLen);
 				for (int i=0; i<recvLen; i++) {
-					printf("[%02x]", recvBuffer[i]);
+					reprintf(ScreenOutput::NO, "[%02x]", recvBuffer[i]);
 				}
-				printf("\n");
+				reprintf(ScreenOutput::NO, "\n");
 				#endif
 			} else if (recvLen == 0) {
 				// 참고자료
@@ -321,7 +322,7 @@ void fThread(int* tcpPort, bool* isSerial) {
 				// 커넥션을 강제해제했을 경우 0이 발생하였음
 				// MSG_DONTWIT를 추가하지 않았을 경우에는 무한대기가 되었음
 				// 우선 이케이스에는 0을 커넥션 종료로 처리함
-				printf("[s] client disconnect error, recv: %d \n", recvLen);
+				reprintf(ScreenOutput::ALWAYS, "[s] client disconnect error, recv: %d \n", recvLen);
 				readWriteInfinite = 0;
 				continue;
 			} else {
@@ -331,13 +332,13 @@ void fThread(int* tcpPort, bool* isSerial) {
 			parseTcpState();
         }
 
-        printf("[s] tcp read/write end\n");
+        reprintf(ScreenOutput::NO, "[s] tcp read/write end\n");
 
         ret = close(clientSock);
-        printf("[s] client socket closed, ret: %d\n", ret);
+        reprintf(ScreenOutput::NO, "[s] client socket closed, ret: %d\n", ret);
 
         ret = close(sock);
-        printf("[s] socket closed, ret: %d\n", ret);
+        reprintf(ScreenOutput::NO, "[s] socket closed, ret: %d\n", ret);
         // 소켓을 정상적으로 너무 빨리 닫고 재 열기할 경우
         // 해당 포트가 이미 사용중이라는 표시가 나타날 수 있음
         usleep(500000);
@@ -348,10 +349,10 @@ int main(int argc, char* argv[]) {
     int tcpPort;
 
     if (argc != ARG_MAX) {
-        printf("!!! requirement arguments is %d ea !!!\n", ARG_MAX);
-        printf("input argument: %d\n", argc);
+        reprintf(ScreenOutput::ALWAYS, "!!! requirement arguments is %d ea !!!\n", ARG_MAX);
+        reprintf(ScreenOutput::ALWAYS, "input argument: %d\n", argc);
         for (int i=0; i<argc; i++) {
-            printf("argv[%d]: %s\n", i, argv[i]);
+            reprintf(ScreenOutput::ALWAYS, "argv[%d]: %s\n", i, argv[i]);
         }
 
         return -1;
@@ -361,11 +362,11 @@ int main(int argc, char* argv[]) {
     errno = 0;
     tcpPort = strtol(argv[ARG_TCP_PORT], &p, 10);
     if (*p != '\0' || errno != 0) {
-        printf("argument(host port) parsing error.\n");
+        reprintf(ScreenOutput::ALWAYS, "argument(host port) parsing error.\n");
 
         return -1;
     }
-    printf("argument(host port) is set :[%d].\n", tcpPort);
+    reprintf(ScreenOutput::ALWAYS, "argument(host port) is set :[%d].\n", tcpPort);
 
 #define THREAD_TCP_EN 1
 	#if THREAD_TCP_EN
@@ -379,16 +380,16 @@ int main(int argc, char* argv[]) {
 	ValueInput valueInput, valueInputPre;
 	ValueOutput valueOutput, valueOutputPre;
 
-	printf("serial port: %s\n", serialPort.c_str());
+	reprintf(ScreenOutput::ALWAYS, "serial port: %s\n", serialPort.c_str());
 
 	faduino = Faduino(serialPort, baudrate);
 	Prog prog;
 
 	if(faduino.initSerial() == false) {
-		printf("init() returns false, please check your devices.\n");
-		printf("Set port parameters using the following Linux command:\n");
-		printf("stty -F /dev/ttyUSB? %d raw\n", baudrate);
-		printf("You may need to have ROOT access\n");
+		reprintf(ScreenOutput::ALWAYS, "init() returns false, please check your devices.\n");
+		reprintf(ScreenOutput::ALWAYS, "Set port parameters using the following Linux command:\n");
+		reprintf(ScreenOutput::ALWAYS, "stty -F /dev/ttyUSB? %d raw\n", baudrate);
+		reprintf(ScreenOutput::ALWAYS, "You may need to have ROOT access\n");
 
 		return 0;
 	}
@@ -433,9 +434,9 @@ int main(int argc, char* argv[]) {
 
 	faduino.sendFaduinoCmd(valueOutput);
     
-    printf("rosOpenCmd: %s\n", ROS_RUN);
-    printf("rosCheckCmd: %s\n", ROS_CHECK);
-    printf("rosCloseCmd: %s\n", ROS_KILL);
+    reprintf(ScreenOutput::ALWAYS, "rosOpenCmd: %s\n", ROS_RUN);
+    reprintf(ScreenOutput::ALWAYS, "rosCheckCmd: %s\n", ROS_CHECK);
+    reprintf(ScreenOutput::ALWAYS, "rosCloseCmd: %s\n", ROS_KILL);
 
 	#if THREAD_TCP_EN
 	isSerial = true;
@@ -500,7 +501,7 @@ int main(int argc, char* argv[]) {
 					shutdownFSM++;
 
 					prog.execute(AMR_OFF);
-					printf("%s\n", AMR_OFF);
+					reprintf(ScreenOutput::NO, "%s\n", AMR_OFF);
 					break;
 				default:
 					break;
@@ -509,13 +510,13 @@ int main(int argc, char* argv[]) {
 
 		if (sizeFaduinoState) {
 			#if 0
-			printf("faduino.queFaduinoState.size(): %d\n", sizeFaduinoState);
+			reprintf(ScreenOutput::NO, "faduino.queFaduinoState.size(): %d\n", sizeFaduinoState);
 			#endif
 			valueInput = faduino.queFaduinoState.front();
 			faduino.queFaduinoState.pop();
 
 			#if 0
-			printf("valueInput   : %1d %1d %1d %1d\nvalueInputPre: %1d %1d %1d %1d\n",
+			reprintf(ScreenOutput::NO, "valueInput   : %1d %1d %1d %1d\nvalueInputPre: %1d %1d %1d %1d\n",
 				valueInput.estop_fr, valueInput.estop_bl, valueInput.sw_start, valueInput.sw_stop,
 				valueInputPre.estop_fr, valueInputPre.estop_bl, valueInputPre.sw_start, valueInputPre.sw_stop);
 			#endif
@@ -565,7 +566,7 @@ int main(int argc, char* argv[]) {
 						faduino.sendFaduinoCmd(valueOutput);
 						valueOutputPre = valueOutput;
 						#if 0
-						printf("valueInput.estop_fr PUSHED\n");
+						reprintf(ScreenOutput::NO, "valueInput.estop_fr PUSHED\n");
 						#endif
 						#endif
 						break;
@@ -617,7 +618,7 @@ int main(int argc, char* argv[]) {
 						faduino.sendFaduinoCmd(valueOutput);
 						valueOutputPre = valueOutput;
 						#if 0
-						printf("valueInput.estop_bl PUSHED\n");
+						reprintf(ScreenOutput::NO, "valueInput.estop_bl PUSHED\n");
 						#endif
 						#endif
 						break;
@@ -672,12 +673,12 @@ int main(int argc, char* argv[]) {
 						faduino.sendFaduinoCmd(valueOutput);
 						valueOutputPre = valueOutput;
 						#if 0
-						printf("valueInput.sw_start DOUBLE\n");
+						reprintf(ScreenOutput::NO, "valueInput.sw_start DOUBLE\n");
 						#endif
 
 						if (!strlen(prog.execute(ROS_CHECK).c_str())) {
 							prog.rosRun();
-							printf("run ROS\n");
+							reprintf(ScreenOutput::NO, "run ROS\n");
 						} else {
 							valueOutput.buzzer.onTime = 200;
 							valueOutput.buzzer.offTime = 200;
@@ -713,13 +714,13 @@ int main(int argc, char* argv[]) {
 
 							faduino.sendFaduinoCmd(valueOutput);
 							valueOutputPre = valueOutput;
-							printf("already run ROS\n");
+							reprintf(ScreenOutput::NO, "already run ROS\n");
 						}
 						#endif
 						break;
 					case LONG:
 						#if 0
-						printf("valueInput.sw_start LONG\n");
+						reprintf(ScreenOutput::NO, "valueInput.sw_start LONG\n");
 						#endif
 						break;
 					default:
@@ -767,27 +768,27 @@ int main(int argc, char* argv[]) {
 						faduino.sendFaduinoCmd(valueOutput);
 						valueOutputPre = valueOutput;
 						#if 0
-						printf("valueInput.sw_stop DOUBLE\n");
+						reprintf(ScreenOutput::NO, "valueInput.sw_stop DOUBLE\n");
 						#endif
 
 						prog.execute(ROS_KILL);
-						printf("kill ROS\n");
+						reprintf(ScreenOutput::NO, "kill ROS\n");
 						#endif
 						break;
 					case LONG:
 						#if 1
-						printf("valueInput.sw_stop LONG\n");
+						reprintf(ScreenOutput::NO, "valueInput.sw_stop LONG\n");
 						#endif
 						break;
 					case VERYLONG:
 						shutdown = true;
 						#if 1
-						printf("valueInput.sw_stop VERYLONG\n");
+						reprintf(ScreenOutput::NO, "valueInput.sw_stop VERYLONG\n");
 						#endif
 						break;
 					case ULTRALONG:
 						#if 1
-						printf("valueInput.sw_stop ULTRALONG\n");
+						reprintf(ScreenOutput::NO, "valueInput.sw_stop ULTRALONG\n");
 						#endif
 						break;
 					default:
@@ -800,9 +801,9 @@ int main(int argc, char* argv[]) {
 	faduino.closeSerial();
 
 	#if THREAD_TCP_EN
-    printf("[c] threadTcp join\n");
+    reprintf(ScreenOutput::ALWAYS, "[c] threadTcp join\n");
     threadTcp.join();
-    printf("[c] threadTcp joined\n");
+    reprintf(ScreenOutput::ALWAYS, "[c] threadTcp joined\n");
 	#endif
 
 	return 0;
