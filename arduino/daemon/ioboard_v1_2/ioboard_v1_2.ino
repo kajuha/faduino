@@ -19,7 +19,7 @@
 #define PIN_INPUT_ESTOP_BL 22
 #define PIN_INPUT_SW_START 26
 #define PIN_INPUT_SW_STOP 27
-#define PIN_INPUT_SW_BUMPER 24
+#define PIN_INPUT_SPARE1 24
 #define PIN_INPUT_SPARE2 25
 
 
@@ -38,7 +38,6 @@ unsigned long ts_now;
 // 입력핀 변수(클래스)(더블클릭 및 롱클릭 등 감지)
 PinButton swStart(PIN_INPUT_SW_START, INPUT);
 PinButton swStop(PIN_INPUT_SW_STOP, INPUT);
-PinButton swBumper(PIN_INPUT_SW_BUMPER, INPUT);
 
 // 출력핀 변수(클래스)(블링크 및 온오프 등 출력)
 Flasher swPc(PIN_OUTPUT_SW_PC, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
@@ -48,6 +47,8 @@ Flasher mdEstop(PIN_OUTPUT_MD_ESTOP, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::
 Flasher ledStart(PIN_OUTPUT_LED_START, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
 Flasher ledStop(PIN_OUTPUT_LED_STOP, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
 Flasher batRelay(PIN_OUTPUT_BAT_RELAY, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher outSpare1(PIN_OUTPUT_SPARE1, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+Flasher outSpare2(PIN_OUTPUT_SPARE2, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
 
 int stateEstopFR;
 int stateEstopBL;
@@ -58,6 +59,7 @@ unsigned long us_now, us_pre;
 
 void setup() {
   // 통신 설정
+  Serial.begin(BAUDRATE);
   Serial1.begin(BAUDRATE);
 
   // RS485 출력핀 LOW로 설정
@@ -69,7 +71,6 @@ void setup() {
   pinMode(PIN_INPUT_ESTOP_BL, INPUT_PULLUP);
   swStart.update();
   swStop.update();
-  swBumper.update();
 
   us_now = us_pre = millis();
   
@@ -82,6 +83,8 @@ void setup() {
   ledStop.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
   batRelay.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::ON, FADUINO::ORDER::ON_FIRST);
   batRelay.update();
+  outSpare1.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+  outSpare2.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
   ts_now = millis();
   ts_bootup_start = ts_now;
 }
@@ -93,7 +96,6 @@ void loop() {
   // 입력핀 상태(더블클릭, 롱클릭 등) 처리
   swStart.update();
   swStop.update();
-  swBumper.update();
 
   // 어떤 클릭인지 확인
   if (swStart.isDoubleClick()) {
@@ -127,18 +129,12 @@ void loop() {
     mdEstop.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
     ledStart.setOnOffTime(1000, 1000, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
     ledStop.setOnOffTime(1000, 1000, STATE_ACT::INFINITE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+    outSpare1.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+    outSpare2.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
 
     batRelay.setOnOffTime((buzzerTime.onTime+buzzerTime.offTime)*(buzzerTime.targetCount+1), (buzzerTime.onTime+buzzerTime.offTime), STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
   } else {
     valueInput.sw_stop = STATE_INPUT::RELEASED;
-  }
-  
-  // 어떤 클릭인지 확인
-  if (swBumper.isDoubleClick()) {
-  } else if (swBumper.isLongClick()) {
-  } else if (swBumper.isVeryLongClick()) {
-  } else if (swBumper.isUltraLongClick()) {
-  } else {
   }
   
   // 비상스위치 눌렸는지 확인
@@ -251,6 +247,8 @@ void loop() {
   ledStart.update();
   ledStop.update();
   batRelay.update();
+  outSpare1.update();
+  outSpare2.update();
 }
 
 bool parseData() {
@@ -299,7 +297,13 @@ bool parseData() {
         state = FSM_FADUINO::DATA;
       }
       break;
+    #if 0
     case FSM_FADUINO::DATA:
+      #if 0
+      // 아두이노의 시리얼 수신 버퍼의 크기가 64바이트임
+      // 64바이트를 초과할 경우 데이터 수신불가
+      Serial.println(Serial1.available());
+      #endif
       if (Serial1.available() >= SIZE_DATA_OUTPUT) {
         #if 1
         Serial1.readBytes(packet+IDX_DATA, SIZE_DATA_OUTPUT);
@@ -313,6 +317,38 @@ bool parseData() {
         state = FSM_FADUINO::CRC16;
       }
       break;
+    #else
+    case FSM_FADUINO::DATA:
+      #if 0
+      Serial.println(Serial1.available());
+      #endif
+
+      static FSM_ARDUINO_SERIAL_RX fsmArduinoSerialRx;
+      static int bufferedByteSize;
+      static int dataByteSizeToRead;
+
+      switch (fsmArduinoSerialRx) {
+        case FSM_ARDUINO_SERIAL_RX::INIT:
+          dataByteSizeToRead = SIZE_DATA_OUTPUT;
+          fsmArduinoSerialRx = FSM_ARDUINO_SERIAL_RX::READ;
+          break;
+        case FSM_ARDUINO_SERIAL_RX::READ:
+          bufferedByteSize = Serial1.available();
+          if ((bufferedByteSize-dataByteSizeToRead) >= 0) {
+            Serial1.readBytes(packet+IDX_DATA+(SIZE_DATA_OUTPUT-dataByteSizeToRead), dataByteSizeToRead);
+            fsmArduinoSerialRx = FSM_ARDUINO_SERIAL_RX::INIT;
+            state = FSM_FADUINO::CRC16;
+          } else {
+            Serial1.readBytes(packet+IDX_DATA+(SIZE_DATA_OUTPUT-dataByteSizeToRead), bufferedByteSize);
+            dataByteSizeToRead -= bufferedByteSize;
+          }
+          break;
+        default:
+          Serial.println("IMPOSSIBLE CASE");
+          break;
+      }
+      break;
+    #endif
     case FSM_FADUINO::CRC16:
       if (Serial1.available() >= SIZE_CRC16) {
         #if 1
@@ -378,6 +414,8 @@ void checksumData(unsigned char* packet)
         if (valueOutput.led_start.update) ledStart.setOnOffTime(valueOutput.led_start.onTime, valueOutput.led_start.offTime, valueOutput.led_start.targetCount, valueOutput.led_start.lastState, valueOutput.led_start.order);
         if (valueOutput.led_stop.update) ledStop.setOnOffTime(valueOutput.led_stop.onTime, valueOutput.led_stop.offTime, valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState, valueOutput.led_stop.order);
         if (valueOutput.bat_relay.update == RELAY_MAGIC) batRelay.setOnOffTime(valueOutput.bat_relay.onTime, valueOutput.bat_relay.offTime, valueOutput.bat_relay.targetCount, valueOutput.bat_relay.lastState, valueOutput.bat_relay.order);
+        if (valueOutput.out_spare1.update) outSpare1.setOnOffTime(valueOutput.out_spare1.onTime, valueOutput.out_spare1.offTime, valueOutput.out_spare1.targetCount, valueOutput.out_spare1.lastState, valueOutput.out_spare1.order);
+        if (valueOutput.out_spare2.update) outSpare2.setOnOffTime(valueOutput.out_spare2.onTime, valueOutput.out_spare2.offTime, valueOutput.out_spare2.targetCount, valueOutput.out_spare2.lastState, valueOutput.out_spare2.order);
         break;
       case TYPE_CMD::HB:
         break;

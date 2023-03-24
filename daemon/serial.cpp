@@ -138,16 +138,18 @@ bool Faduino::sendFaduinoCmd(ValueOutput valueOutput) {
 	sprintf((char*)(serialBufferTx+IDX_CRC16_OUTPUT), "%04x", crc16in);
 	serialBufferTx[IDX_TAIL_OUTPUT] = DATA_TAIL;
 
+	#if 0
+	reprintf(ScreenOutput::ALWAYS, "SERIAL DATA\n");
+	for (int i=0; i<SIZE_TOTAL_OUTPUT; i++) {
+		printf("[%02x]", serialBufferTx[i]);
+	}
+	printf("\n");
+	#endif
+
 	#if SERIAL_EN
 	write(fd, serialBufferTx, SIZE_TOTAL_OUTPUT);
 	#else
 	reprintf(ScreenOutput::NO, "SEND SERIAL DUMMY\n");
-	#if 0
-	for (int i=0; i<SIZE_DATA_OUTPUT; i++) {
-		reprintf(ScreenOutput::NO, "[%02x]", serialBufferTx[i]);
-	}
-	reprintf(ScreenOutput::NO, "\n");
-	#endif
 	reprintf(ScreenOutput::NO, "TS(us): %d\n", *((uint32_t*)(serialBufferTx+IDX_TS)));
 	reprintf(ScreenOutput::NO, "buzzer   (on: %5d off: %5d count: %2d last: %2d update: %2d order: %2d)\n",
 		valueOutput.buzzer.onTime, valueOutput.buzzer.offTime,

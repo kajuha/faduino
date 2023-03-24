@@ -37,6 +37,8 @@ typedef struct _ValueOutput {
   TimeOnOff led_start;
   TimeOnOff led_stop;
   TimeOnOff bat_relay;
+  TimeOnOff out_spare1;
+  TimeOnOff out_spare2;
 } ValueOutput;
 #pragma pack(pop)
 
@@ -46,7 +48,7 @@ typedef struct _ValueOutput {
 #define SIZE_TYPE   1
 #define SIZE_TS     4
 #define SIZE_DATA_INPUT   4
-#define SIZE_DATA_OUTPUT  60
+#define SIZE_DATA_OUTPUT  80
 #define SIZE_CRC16  4
 #define SIZE_TAIL   1
 #define SIZE_TOTAL_INPUT  (SIZE_HEAD+SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT+SIZE_CRC16+SIZE_TAIL)
@@ -93,6 +95,10 @@ enum FSM_FADUINO {
 
 enum TYPE_CMD {
   UNKNOWN, CMD, ACK, RES, DONE, HB, SENSOR, RELAY
+};
+
+enum FSM_ARDUINO_SERIAL_RX {
+  INIT, READ
 };
 
 class CRC {

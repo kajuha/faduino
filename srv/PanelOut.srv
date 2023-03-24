@@ -4,5 +4,7 @@ TimeOnOff md_estop
 TimeOnOff led_start
 TimeOnOff led_stop
 TimeOnOff bat_relay
+TimeOnOff out_spare1
+TimeOnOff out_spare2
 ---
 bool success

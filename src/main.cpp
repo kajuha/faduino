@@ -33,6 +33,10 @@ bool servicePanelOutCallback(faduino::PanelOut::Request &req, faduino::PanelOut:
         req.led_stop.onTime, req.led_stop.offTime, req.led_stop.targetCount, req.led_stop.lastState, req.led_stop.update, req.led_stop.order);
     printf("[req:bat_relay] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
         req.bat_relay.onTime, req.bat_relay.offTime, req.bat_relay.targetCount, req.bat_relay.lastState, req.bat_relay.update, req.bat_relay.order);
+    printf("[req:out_spare1] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
+        req.out_spare1.onTime, req.out_spare1.offTime, req.out_spare1.targetCount, req.out_spare1.lastState, req.out_spare1.update, req.out_spare1.order);
+    printf("[req:out_spare2] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
+        req.out_spare2.onTime, req.out_spare2.offTime, req.out_spare2.targetCount, req.out_spare2.lastState, req.out_spare2.update, req.out_spare2.order);
     #endif
 
     #if 0
@@ -56,6 +60,10 @@ bool servicePanelOutCallback(faduino::PanelOut::Request &req, faduino::PanelOut:
         srvValueOutput.led_stop.onTime, srvValueOutput.led_stop.offTime, srvValueOutput.led_stop.targetCount, srvValueOutput.led_stop.lastState, srvValueOutput.led_stop.update, srvValueOutput.led_stop.order);
     printf("[srv:bat_relay] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
         srvValueOutput.bat_relay.onTime, srvValueOutput.bat_relay.offTime, srvValueOutput.bat_relay.targetCount, srvValueOutput.bat_relay.lastState, srvValueOutput.bat_relay.update, srvValueOutput.bat_relay.order);
+    printf("[srv:out_spare1] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
+        srvValueOutput.out_spare1.onTime, srvValueOutput.out_spare1.offTime, srvValueOutput.out_spare1.targetCount, srvValueOutput.out_spare1.lastState, srvValueOutput.out_spare1.update, srvValueOutput.out_spare1.order);
+    printf("[srv:out_spare2] on: %5d, off: %5d, cnt: %2d, last: %2d, update: %2d, order: %2d\n",
+        srvValueOutput.out_spare2.onTime, srvValueOutput.out_spare2.offTime, srvValueOutput.out_spare2.targetCount, srvValueOutput.out_spare2.lastState, srvValueOutput.out_spare2.update, srvValueOutput.out_spare2.order);
     #endif
     
 #define SRV_SUCCESS	true
