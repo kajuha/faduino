@@ -3,7 +3,7 @@
     <arg name="main_hz" default="1000" doc="main loop herz"/>
     <arg name="PUB_SEC_PERIOD" default="1" doc="PUB_SEC_PERIOD"/>
     
-    <node pkg="faduino" type="dummy" name="dummy" output="$(arg message_display)">
+    <node pkg="faduino" type="dummy" name="faduino" output="$(arg message_display)">
         <param name="main_hz" value="$(arg main_hz)"/>
         <param name="PUB_SEC_PERIOD" value="$(arg PUB_SEC_PERIOD)"/>
     </node>
