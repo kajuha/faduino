@@ -95,6 +95,149 @@ void sigint_handler(int sig) {
     isConnectedServer = 0;
 }
 
+std::queue<unsigned char> queTcpRx;
+
+void checksumTcpState(unsigned char* packet) {
+	#if 0
+	// 수신부 crc16 문자열 추출
+	unsigned short crc16out;
+	sscanf((const char*)(packet+IDX_CRC16_INPUT), "%04x", (unsigned int*)&crc16out);
+
+	// 수신부 data의 crc16 계산
+	unsigned short crc16 = CRC::CRC16((unsigned char*)(packet+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
+
+	if (crc16out == crc16) {
+	#else
+	// 수신부 crc16 문자열 추출
+	uint32_t crc16out;
+	memcpy(&crc16out, (const char*)(packet+IDX_CRC16_INPUT), SIZE_CRC16);
+	printf("crc16out: %x\n", crc16out);
+
+	if (crc16out == 0x55AA55AA) {
+    #endif
+		switch (packet[IDX_TYPE]) {
+            case TYPE_CMD::CMD:
+                for (int i=0; i<SIZE_TOTAL_INPUT; i++) {
+                    printf("[%02x]", packet[i]);
+                }
+                printf("\n");
+                static ValueInput valueInput;
+                #if 0
+        		memcpy(&valueInput, packet+IDX_DATA, SIZE_DATA_INPUT);
+                #else
+                valueInput.estop_fr = *(packet+IDX_DATA+0);
+                valueInput.estop_bl = *(packet+IDX_DATA+1);
+                valueInput.sw_start = *(packet+IDX_DATA+2);
+                valueInput.sw_stop = *(packet+IDX_DATA+3);
+                valueInput.in_spare1 = *(packet+IDX_DATA+4);
+                valueInput.in_spare2 = *(packet+IDX_DATA+5);
+                #endif
+
+				#if 1
+				printf("type:%d, ",
+					packet[IDX_TYPE]);
+				printf("estop_fr:%d, estop_bl:%d, sw_start:%d, sw_stop:%d, in_spare1:%d, in_spare2:%d, ts:%d\n",
+					valueInput.estop_fr, valueInput.estop_bl, valueInput.sw_start, valueInput.sw_stop, valueInput.in_spare1, valueInput.in_spare2, *((int*)(packet+IDX_TS)));
+				#endif
+
+                break;
+			default:
+				printf("[c] unknown type:%d, ts:%d\n",
+					packet[IDX_TYPE], *((int*)(packet+IDX_TS)));
+				break;
+		}
+	} else {
+		printf("[c] crc16 not matched !!!\n");
+	}
+}
+
+bool parseTcpState() {
+	static int state = FSM_FADUINO::HEAD;
+	static unsigned char packet[SIZE_TOTAL_INPUT] = {'\0', };
+
+	switch (state) {
+		case FSM_FADUINO::HEAD:
+			if (queTcpRx.size() >= SIZE_HEAD) {
+				packet[IDX_HEAD] = queTcpRx.front();
+				if (packet[IDX_HEAD] == DATA_HEAD) {
+					state = FSM_FADUINO::TYPE;
+				} else {
+					printf("[c] FSM_FADUINO::HEAD not Match \n");
+					state = FSM_FADUINO::HEAD;
+				}
+				queTcpRx.pop();
+			}
+			break;
+		case FSM_FADUINO::TYPE:
+			if (queTcpRx.size() >= SIZE_TYPE) {
+				packet[IDX_TYPE] = queTcpRx.front();
+				state = FSM_FADUINO::TS;
+				queTcpRx.pop();
+			}
+			break;
+		case FSM_FADUINO::TS:
+			if (queTcpRx.size() >= SIZE_TS) {
+				for (int i=0; i<SIZE_TS; i++) {
+					packet[IDX_TS+i] = queTcpRx.front();
+					queTcpRx.pop();
+				}
+
+				state = FSM_FADUINO::DATA;
+			}
+			break;
+		case FSM_FADUINO::DATA:
+			if (queTcpRx.size() >= SIZE_DATA_INPUT) {
+				for (int i=0; i<SIZE_DATA_INPUT; i++) {
+					packet[IDX_DATA+i] = queTcpRx.front();
+					queTcpRx.pop();
+				}
+
+				state = FSM_FADUINO::CRC16;
+			}
+			break;
+		case FSM_FADUINO::CRC16:
+			if (queTcpRx.size() >= SIZE_CRC16) {
+				for (int i=0; i<SIZE_CRC16; i++) {
+					packet[IDX_CRC16_INPUT+i] = queTcpRx.front();
+					queTcpRx.pop();
+				}
+
+				state = FSM_FADUINO::TAIL;
+			}
+			break;
+		case FSM_FADUINO::TAIL:
+			if (queTcpRx.size() >= SIZE_TAIL) {
+				packet[IDX_TAIL_INPUT] = queTcpRx.front();
+				if (packet[IDX_TAIL_INPUT] == DATA_TAIL) {
+					state = FSM_FADUINO::OK;
+				} else {
+					printf("[c] FSM_FADUINO::TAIL not Match\n");
+					for (int i=0; i<SIZE_TOTAL_INPUT; i++) {
+						printf("[%02x]", packet[i]);
+					}
+					printf("\n");
+					state = FSM_FADUINO::HEAD;
+				}
+				queTcpRx.pop();
+			}
+			break;
+		case FSM_FADUINO::OK:
+			checksumTcpState(packet);
+
+			memset(packet, '\0', SIZE_TOTAL_INPUT);
+			
+			state = FSM_FADUINO::HEAD;
+
+			break;
+		default:
+			state = FSM_FADUINO::HEAD;
+
+			break;
+	}
+	
+	return false;
+}
+
 void fThread(std::string host_name, int tcp_port) {
     // TCP 통신 관련 변수
     struct sockaddr_in server_addr;
@@ -197,11 +340,12 @@ void fThread(std::string host_name, int tcp_port) {
                 memset(recvBuffer, '\0', sizeof(recvBuffer));
                 recvLen = recv(server_sock, recvBuffer, BUFSIZ, 0);
                 #if 1
-                printf("recvLen: %d ", recvLen);
+                // printf("recvLen: %d ", recvLen);
                 for (int i=0; i<recvLen; i++) {
-                    printf("[%02x]", recvBuffer[i]);
+                    // printf("[%02x]", recvBuffer[i]);
+                    queTcpRx.push(recvBuffer[i]);
                 }
-                printf("\n");
+                // printf("\n");
                 #endif
             } else if (recvLen == 0) {
                 // 참고자료
@@ -225,6 +369,8 @@ void fThread(std::string host_name, int tcp_port) {
             } else {
                 usleep(1000);
             }
+
+            parseTcpState();
         }
         printf("[c] tcp read/write end\n");
 

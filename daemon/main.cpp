@@ -16,6 +16,7 @@
 #define ARG_MAX (ARG_TCP_PORT+1)
 
 Faduino faduino;
+std::queue<ValueInput> queValueInput;
 
 int sock, clientSock;
 
@@ -329,6 +330,40 @@ void fThread(int* tcpPort, bool* isSerial) {
                 usleep(1000);
 			}
 
+
+			static int sizeValueInput;
+			sizeValueInput = queValueInput.size();
+			if (sizeValueInput) {
+				#if 0
+				reprintf(ScreenOutput::NO, "faduino.queValueInput.size(): %d\n", sizeValueInput);
+				#endif
+				static ValueInput valueInput;
+				valueInput = queValueInput.front();
+				queValueInput.pop();
+
+				static uint8_t buffer[SIZE_TOTAL_INPUT];
+				buffer[IDX_HEAD] = DATA_HEAD;
+				uint8_t type = TYPE_CMD::CMD;
+				memcpy(buffer+IDX_TYPE, &type, SIZE_TYPE);
+				uint32_t timestamp = 0;
+				memcpy(buffer+IDX_TS, &timestamp, SIZE_TS);
+                #if 0
+				memcpy(buffer+IDX_DATA, &valueInput, SIZE_DATA_INPUT);
+                #else
+                *(buffer+IDX_DATA+0) = valueInput.estop_fr;
+                *(buffer+IDX_DATA+1) = valueInput.estop_bl;
+                *(buffer+IDX_DATA+2) = valueInput.sw_start;
+                *(buffer+IDX_DATA+3) = valueInput.sw_stop;
+                *(buffer+IDX_DATA+4) = valueInput.in_spare1;
+                *(buffer+IDX_DATA+5) = valueInput.in_spare2;
+                #endif
+				uint32_t crc16 = 0x55AA55AA;
+				memcpy(buffer+IDX_CRC16_INPUT, &crc16, SIZE_CRC16);
+				buffer[IDX_TAIL_INPUT] = DATA_TAIL;
+
+				send(clientSock, buffer, SIZE_TOTAL_INPUT, 0);
+			}
+
 			parseTcpState();
         }
 
@@ -514,6 +549,8 @@ int main(int argc, char* argv[]) {
 			#endif
 			valueInput = faduino.queFaduinoState.front();
 			faduino.queFaduinoState.pop();
+
+			queValueInput.push(valueInput);
 
 			#if 0
 			reprintf(ScreenOutput::NO, "valueInput   : %1d %1d %1d %1d %1d %1d\nvalueInputPre: %1d %1d %1d %1d %1d %1d\n",
@@ -837,9 +874,6 @@ int main(int argc, char* argv[]) {
 						#if 0
 						reprintf(ScreenOutput::NO, "valueInput.in_spare1 PUSHED\n");
 						#endif
-
-						prog.execute(ROS_KILL);
-						reprintf(ScreenOutput::NO, "kill ROS\n");
 						#endif
 						break;
 					case RELEASED:
@@ -892,9 +926,6 @@ int main(int argc, char* argv[]) {
 						#if 0
 						reprintf(ScreenOutput::NO, "valueInput.in_spare2 PUSHED\n");
 						#endif
-						
-						prog.execute(ROS_KILL);
-						reprintf(ScreenOutput::NO, "kill ROS\n");
 						#endif
 						break;
 					case RELEASED:
