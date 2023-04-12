@@ -11,6 +11,7 @@
 #include <queue>
 
 #include "faduino/PanelOut.h"
+#include "faduino/PanelIn.h"
 
 #include "faduino/main.h"
 
@@ -96,6 +97,7 @@ void sigint_handler(int sig) {
 }
 
 std::queue<unsigned char> queTcpRx;
+std::queue<ValueInput> queValueInput;
 
 void checksumTcpState(unsigned char* packet) {
 	#if 0
@@ -111,16 +113,16 @@ void checksumTcpState(unsigned char* packet) {
 	// 수신부 crc16 문자열 추출
 	uint32_t crc16out;
 	memcpy(&crc16out, (const char*)(packet+IDX_CRC16_INPUT), SIZE_CRC16);
-	printf("crc16out: %x\n", crc16out);
+	// printf("crc16out: %x\n", crc16out);
 
 	if (crc16out == 0x55AA55AA) {
     #endif
 		switch (packet[IDX_TYPE]) {
             case TYPE_CMD::CMD:
-                for (int i=0; i<SIZE_TOTAL_INPUT; i++) {
-                    printf("[%02x]", packet[i]);
-                }
-                printf("\n");
+                // for (int i=0; i<SIZE_TOTAL_INPUT; i++) {
+                //     printf("[%02x]", packet[i]);
+                // }
+                // printf("\n");
                 static ValueInput valueInput;
                 #if 0
         		memcpy(&valueInput, packet+IDX_DATA, SIZE_DATA_INPUT);
@@ -133,7 +135,9 @@ void checksumTcpState(unsigned char* packet) {
                 valueInput.in_spare2 = *(packet+IDX_DATA+5);
                 #endif
 
-				#if 1
+                queValueInput.push(valueInput);
+
+				#if 0
 				printf("type:%d, ",
 					packet[IDX_TYPE]);
 				printf("estop_fr:%d, estop_bl:%d, sw_start:%d, sw_stop:%d, in_spare1:%d, in_spare2:%d, ts:%d\n",
@@ -407,6 +411,8 @@ int main(int argc, char* argv[]) {
 
     // 패널 출력 서비스
     ros::ServiceServer service_panel_out = nh.advertiseService("/faduino/panel_out", servicePanelOutCallback);
+
+    ros::Publisher panel_in_pub = nh.advertise<faduino::PanelIn>("/faduino/panel_in", 10);
     
     ros::Rate r(main_hz);
 
@@ -420,6 +426,22 @@ int main(int argc, char* argv[]) {
 #define TEST_LOOP_SEC 1.0 
         if ((ts_now-ts_pre) > TEST_LOOP_SEC) {
             ts_pre = ts_now;
+        }
+
+        if (queValueInput.size()) {
+            static ValueInput valueInput;
+            valueInput = queValueInput.front();
+            queValueInput.pop();
+
+            static faduino::PanelIn panelIn;
+            panelIn.estop_fr = valueInput.estop_fr;
+            panelIn.estop_bl = valueInput.estop_bl;
+            panelIn.sw_start = valueInput.sw_start;
+            panelIn.sw_stop = valueInput.sw_stop;
+            panelIn.in_spare1 = valueInput.in_spare1;
+            panelIn.in_spare2 = valueInput.in_spare2;
+
+            panel_in_pub.publish(panelIn);
         }
 
         ros::spinOnce();
