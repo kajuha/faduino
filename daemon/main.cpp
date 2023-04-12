@@ -516,15 +516,17 @@ int main(int argc, char* argv[]) {
 			faduino.queFaduinoState.pop();
 
 			#if 0
-			reprintf(ScreenOutput::NO, "valueInput   : %1d %1d %1d %1d\nvalueInputPre: %1d %1d %1d %1d\n",
-				valueInput.estop_fr, valueInput.estop_bl, valueInput.sw_start, valueInput.sw_stop,
-				valueInputPre.estop_fr, valueInputPre.estop_bl, valueInputPre.sw_start, valueInputPre.sw_stop);
+			reprintf(ScreenOutput::NO, "valueInput   : %1d %1d %1d %1d %1d %1d\nvalueInputPre: %1d %1d %1d %1d %1d %1d\n",
+				valueInput.estop_fr, valueInput.estop_bl, valueInput.sw_start, valueInput.sw_stop, valueInput.in_spare1, valueInput.in_spare2,
+				valueInputPre.estop_fr, valueInputPre.estop_bl, valueInputPre.sw_start, valueInputPre.sw_stop, valueInputPre.in_spare1, valueInputPre.in_spare2);
 			#endif
 			
 			if (valueInputPre.estop_fr != valueInput.estop_fr ||
 				valueInputPre.estop_bl != valueInput.estop_bl ||
 				valueInputPre.sw_start != valueInput.sw_start ||
-				valueInputPre.sw_stop != valueInput.sw_stop) {
+				valueInputPre.sw_stop != valueInput.sw_stop ||
+				valueInputPre.in_spare1 != valueInput.in_spare1 ||
+				valueInputPre.in_spare2 != valueInput.in_spare2) {
 				valueInputPre = valueInput;
 
 				switch (valueInput.estop_fr) {
@@ -790,6 +792,116 @@ int main(int argc, char* argv[]) {
 						#if 1
 						reprintf(ScreenOutput::NO, "valueInput.sw_stop ULTRALONG\n");
 						#endif
+						break;
+					default:
+						break;
+				}
+				switch (valueInput.in_spare1) {
+					case PUSHED:
+						#if 1
+						// 상위로 전달을 하고 상위에서 수신명령에 대한 처리를 실시
+						valueOutput.buzzer.onTime = 10000;
+						valueOutput.buzzer.offTime = 1000;
+						valueOutput.buzzer.targetCount = STATE_ACT::ONCE;
+						valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
+						valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_power.onTime = 0;
+						valueOutput.md_power.offTime = 0;
+						valueOutput.md_power.targetCount = STATE_ACT::DIRECT;
+						valueOutput.md_power.lastState = FADUINO::RELAY::OFF;
+						valueOutput.md_power.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_estop.onTime = 0;
+						valueOutput.md_estop.offTime = 0;
+						valueOutput.md_estop.targetCount = STATE_ACT::DIRECT;
+						valueOutput.md_estop.lastState = FADUINO::RELAY::OFF;
+						valueOutput.md_estop.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_start.onTime = 0;
+						valueOutput.led_start.offTime = 0;
+						valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
+						valueOutput.led_start.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_start.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_stop.onTime = 1000;
+						valueOutput.led_stop.offTime = 1000;
+						valueOutput.led_stop.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_stop.lastState = FADUINO::RELAY::ON;
+						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
+
+						valueOutput.buzzer.update = 1;
+						valueOutput.md_power.update = 1;
+						valueOutput.md_estop.update = 1;
+						valueOutput.led_start.update = 1;
+						valueOutput.led_stop.update = 1;
+
+						faduino.sendFaduinoCmd(valueOutput);
+						valueOutputPre = valueOutput;
+						#if 0
+						reprintf(ScreenOutput::NO, "valueInput.in_spare1 PUSHED\n");
+						#endif
+
+						prog.execute(ROS_KILL);
+						reprintf(ScreenOutput::NO, "kill ROS\n");
+						#endif
+						break;
+					case RELEASED:
+						break;
+					case DOUBLE:
+						break;
+					case LONG:
+						break;
+					default:
+						break;
+				}
+				switch (valueInput.in_spare2) {
+					case PUSHED:
+						#if 1
+						// 상위로 전달을 하고 상위에서 수신명령에 대한 처리를 실시
+						valueOutput.buzzer.onTime = 10000;
+						valueOutput.buzzer.offTime = 1000;
+						valueOutput.buzzer.targetCount = STATE_ACT::ONCE;
+						valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
+						valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_power.onTime = 0;
+						valueOutput.md_power.offTime = 0;
+						valueOutput.md_power.targetCount = STATE_ACT::DIRECT;
+						valueOutput.md_power.lastState = FADUINO::RELAY::OFF;
+						valueOutput.md_power.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_estop.onTime = 0;
+						valueOutput.md_estop.offTime = 0;
+						valueOutput.md_estop.targetCount = STATE_ACT::DIRECT;
+						valueOutput.md_estop.lastState = FADUINO::RELAY::OFF;
+						valueOutput.md_estop.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_start.onTime = 0;
+						valueOutput.led_start.offTime = 0;
+						valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
+						valueOutput.led_start.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_start.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_stop.onTime = 1000;
+						valueOutput.led_stop.offTime = 1000;
+						valueOutput.led_stop.targetCount = STATE_ACT::INFINITE;
+						valueOutput.led_stop.lastState = FADUINO::RELAY::ON;
+						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
+
+						valueOutput.buzzer.update = 1;
+						valueOutput.md_power.update = 1;
+						valueOutput.md_estop.update = 1;
+						valueOutput.led_start.update = 1;
+						valueOutput.led_stop.update = 1;
+
+						faduino.sendFaduinoCmd(valueOutput);
+						valueOutputPre = valueOutput;
+						#if 0
+						reprintf(ScreenOutput::NO, "valueInput.in_spare2 PUSHED\n");
+						#endif
+						
+						prog.execute(ROS_KILL);
+						reprintf(ScreenOutput::NO, "kill ROS\n");
+						#endif
+						break;
+					case RELEASED:
+						break;
+					case DOUBLE:
+						break;
+					case LONG:
 						break;
 					default:
 						break;

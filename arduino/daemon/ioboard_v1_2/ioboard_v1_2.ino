@@ -52,6 +52,8 @@ Flasher outSpare2(PIN_OUTPUT_SPARE2, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY::
 
 int stateEstopFR;
 int stateEstopBL;
+int stateInSpare1;
+int stateInSpare2;
 
 static char buffer[BUFSIZ];
 
@@ -71,6 +73,8 @@ void setup() {
   pinMode(PIN_INPUT_ESTOP_BL, INPUT_PULLUP);
   swStart.update();
   swStop.update();
+  pinMode(PIN_INPUT_SPARE1, INPUT);
+  pinMode(PIN_INPUT_SPARE2, INPUT);
 
   us_now = us_pre = millis();
   
@@ -170,6 +174,40 @@ void loop() {
         break;
     }
   }
+  
+  // 범퍼스위치 눌렸는지 확인
+  if (digitalRead(PIN_INPUT_SPARE1)) {
+    valueInput.in_spare1 = STATE_INPUT::RELEASED;
+    stateInSpare1 = STATE_ESTOP::ACTION;
+  } else {
+    switch (stateInSpare1) {
+      case STATE_ESTOP::ACTION:
+        valueInput.in_spare1 = STATE_INPUT::PUSHED;
+        stateInSpare1 = 1;
+        break;
+      case STATE_ESTOP::IDLE:
+        break;
+      default:
+        break;
+    }
+  }
+  
+  // 범퍼스위치 눌렸는지 확인
+  if (digitalRead(PIN_INPUT_SPARE2)) {
+    valueInput.in_spare2 = STATE_INPUT::RELEASED;
+    stateInSpare2 = STATE_ESTOP::ACTION;
+  } else {
+    switch (stateInSpare2) {
+      case STATE_ESTOP::ACTION:
+        valueInput.in_spare2 = STATE_INPUT::PUSHED;
+        stateInSpare2 = 1;
+        break;
+      case STATE_ESTOP::IDLE:
+        break;
+      default:
+        break;
+    }
+  }
 
   // 입력핀에 대한 처리
   if (valueInput.sw_start == STATE_INPUT::LONG) {
@@ -194,14 +232,16 @@ void loop() {
   if (valueInputBefore.estop_fr != valueInput.estop_fr ||
       valueInputBefore.estop_bl != valueInput.estop_bl ||
       valueInputBefore.sw_start != valueInput.sw_start ||
-      valueInputBefore.sw_stop != valueInput.sw_stop) {
+      valueInputBefore.sw_stop != valueInput.sw_stop ||
+      valueInputBefore.in_spare1 != valueInput.in_spare1 ||
+      valueInputBefore.in_spare2 != valueInput.in_spare2) {
     valueInputBefore = valueInput;
 
     // 송신 포맷 생성
     buffer[IDX_HEAD] = DATA_HEAD;
     buffer[IDX_TYPE] = TYPE_CMD::CMD;
     *((unsigned long*)(buffer+IDX_TS)) = micros();
-    sprintf(buffer+IDX_DATA, "%01d%01d%01d%01d", valueInput.estop_fr, valueInput.estop_bl, valueInput.sw_start, valueInput.sw_stop);
+    sprintf(buffer+IDX_DATA, "%01d%01d%01d%01d%01d%01d", valueInput.estop_fr, valueInput.estop_bl, valueInput.sw_start, valueInput.sw_stop, valueInput.in_spare1, valueInput.in_spare2);
     // crc16 계산
     unsigned short crc16in = CRC::CRC16((unsigned char*)(buffer+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
     sprintf(buffer+IDX_CRC16_INPUT, "%04x", crc16in);

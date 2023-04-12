@@ -308,8 +308,8 @@ void Faduino::checksumFaduinoState(unsigned char* packet) {
 	if (crc16out == crc16) {
 		switch (packet[IDX_TYPE]) {
 			case TYPE_CMD::CMD:
-				sscanf((const char*)(packet+IDX_DATA), "%01hd%01hd%01hd%01hd",
-					&valueInput.estop_fr, &valueInput.estop_bl, &valueInput.sw_start, &valueInput.sw_stop);
+				sscanf((const char*)(packet+IDX_DATA), "%01hd%01hd%01hd%01hd%01hd%01hd",
+					&valueInput.estop_fr, &valueInput.estop_bl, &valueInput.sw_start, &valueInput.sw_stop, &valueInput.in_spare1, &valueInput.in_spare2);
 
 				queFaduinoState.push(valueInput);
 
@@ -346,8 +346,8 @@ void Faduino::checksumFaduinoState(unsigned char* packet) {
 				#if 1
 				reprintf(ScreenOutput::NO, "type:%d, ",
 					packet[IDX_TYPE]);
-				reprintf(ScreenOutput::NO, "estop_fr:%d, estop_bl:%d, sw_start:%d, sw_stop:%d, ts:%d\n",
-					valueInput.estop_fr, valueInput.estop_bl, valueInput.sw_start, valueInput.sw_stop, *((int*)(packet+IDX_TS)));
+				reprintf(ScreenOutput::NO, "estop_fr:%d, estop_bl:%d, sw_start:%d, sw_stop:%d, in_spare1:%d, in_spare2:%d, ts:%d\n",
+					valueInput.estop_fr, valueInput.estop_bl, valueInput.sw_start, valueInput.sw_stop, valueInput.in_spare1, valueInput.in_spare2, *((int*)(packet+IDX_TS)));
 				#endif
 				break;
 			case TYPE_CMD::SENSOR:

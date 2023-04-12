@@ -19,6 +19,8 @@ typedef struct _ValueInput {
   uint16_t estop_bl;
   uint16_t sw_start;
   uint16_t sw_stop;
+  uint16_t in_spare1;
+  uint16_t in_spare2;
 } ValueInput;
 
 typedef struct _TimeOnOff {
@@ -47,7 +49,7 @@ typedef struct _ValueOutput {
 #define SIZE_HEAD   1
 #define SIZE_TYPE   1
 #define SIZE_TS     4
-#define SIZE_DATA_INPUT   4
+#define SIZE_DATA_INPUT   6
 #define SIZE_DATA_OUTPUT  80
 #define SIZE_CRC16  4
 #define SIZE_TAIL   1
