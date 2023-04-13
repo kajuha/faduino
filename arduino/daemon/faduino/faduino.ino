@@ -43,6 +43,8 @@ Flasher batRelay(PIN_OUTPUT_BAT_RELAY, 0, 0, STATE_ACT::INFINITE, FADUINO::RELAY
 
 int stateEstopFR;
 int stateEstopBL;
+int stateInSpare1;
+int stateInSpare2;
 
 static char buffer[BUFSIZ];
 
@@ -183,7 +185,7 @@ void loop() {
     buffer[IDX_HEAD] = DATA_HEAD;
     buffer[IDX_TYPE] = TYPE_CMD::CMD;
     *((unsigned long*)(buffer+IDX_TS)) = micros();
-    sprintf(buffer+IDX_DATA, "%01d%01d%01d%01d", valueInput.estop_fr, valueInput.estop_bl, valueInput.sw_start, valueInput.sw_stop);
+    sprintf(buffer+IDX_DATA, "%01d%01d%01d%01d%01d%01d", valueInput.estop_fr, valueInput.estop_bl, valueInput.sw_start, valueInput.sw_stop, valueInput.in_spare1, valueInput.in_spare2);
     // crc16 계산
     unsigned short crc16in = CRC::CRC16((unsigned char*)(buffer+IDX_TYPE), SIZE_TYPE+SIZE_TS+SIZE_DATA_INPUT);
     sprintf(buffer+IDX_CRC16_INPUT, "%04x", crc16in);
@@ -277,7 +279,13 @@ bool parseData() {
         state = FSM_FADUINO::DATA;
       }
       break;
+    #if 0
     case FSM_FADUINO::DATA:
+      #if 0
+      // 아두이노의 시리얼 수신 버퍼의 크기가 64바이트임
+      // 64바이트를 초과할 경우 데이터 수신불가
+      Serial.println(Serial1.available());
+      #endif
       if (Serial1.available() >= SIZE_DATA_OUTPUT) {
         #if 1
         Serial1.readBytes(packet+IDX_DATA, SIZE_DATA_OUTPUT);
@@ -291,6 +299,38 @@ bool parseData() {
         state = FSM_FADUINO::CRC16;
       }
       break;
+    #else
+    case FSM_FADUINO::DATA:
+      #if 0
+      Serial.println(Serial1.available());
+      #endif
+
+      static FSM_ARDUINO_SERIAL_RX fsmArduinoSerialRx;
+      static int bufferedByteSize;
+      static int dataByteSizeToRead;
+
+      switch (fsmArduinoSerialRx) {
+        case FSM_ARDUINO_SERIAL_RX::INIT:
+          dataByteSizeToRead = SIZE_DATA_OUTPUT;
+          fsmArduinoSerialRx = FSM_ARDUINO_SERIAL_RX::READ;
+          break;
+        case FSM_ARDUINO_SERIAL_RX::READ:
+          bufferedByteSize = Serial1.available();
+          if ((bufferedByteSize-dataByteSizeToRead) >= 0) {
+            Serial1.readBytes(packet+IDX_DATA+(SIZE_DATA_OUTPUT-dataByteSizeToRead), dataByteSizeToRead);
+            fsmArduinoSerialRx = FSM_ARDUINO_SERIAL_RX::INIT;
+            state = FSM_FADUINO::CRC16;
+          } else {
+            Serial1.readBytes(packet+IDX_DATA+(SIZE_DATA_OUTPUT-dataByteSizeToRead), bufferedByteSize);
+            dataByteSizeToRead -= bufferedByteSize;
+          }
+          break;
+        default:
+          Serial.println("IMPOSSIBLE CASE");
+          break;
+      }
+      break;
+    #endif
     case FSM_FADUINO::CRC16:
       if (Serial1.available() >= SIZE_CRC16) {
         #if 1
