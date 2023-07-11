@@ -1,7 +1,7 @@
 ARDUINO_TYPE=arduino:avr:mega
 PORT=/dev/recipe.safety.faduino.dev
 LIBRARY=../include
-INO=ioboard_v1_2.ino
+INO=ioboard_v1.ino
 
 compile:
 	arduino-cli compile --fqbn ${ARDUINO_TYPE} --library ${LIBRARY} ${INO}
