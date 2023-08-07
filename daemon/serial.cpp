@@ -29,6 +29,7 @@ Faduino::Faduino(std::string serialPort, int baudrate) {
 	this->baudrate = baudrate;
 
 	#if SERIAL_EN
+	this->ser = new serial::Serial();
 	#else
 	#endif
 }
@@ -37,73 +38,21 @@ bool Faduino::initSerial()	{
 	#if SERIAL_EN
 	const char* COMM_PORT = serialPort.c_str();
 
-	if(-1 == (fd = open(COMM_PORT, O_RDWR))) {
-		reprintf(ScreenOutput::ALWAYS, "error opening port\n");
-		reprintf(ScreenOutput::ALWAYS, "set port parameters using the following Linux command:\n");
-		reprintf(ScreenOutput::ALWAYS, "stty -F %s %d raw\n", COMM_PORT, baudrate);
-		reprintf(ScreenOutput::ALWAYS, "you may need to have ROOT access\n");
+	ser->setPort(serialPort);
+	ser->setBaudrate(baudrate);
+	#define SERIAL_TIMEOUT_MS 3000
+	serial::Timeout to = serial::Timeout::simpleTimeout(SERIAL_TIMEOUT_MS);
+	ser->setTimeout(to);
+
+	ser->open();
+
+	if (!ser->isOpen()) {
+		printf("error opening port[%s] baudrate[%d]\n", COMM_PORT, baudrate);
+		printf("you may need to have ROOT access\n");
 		return false;
 	}
-	#else
-	#endif
 
-	struct termios newtio;
-	memset(&newtio, 0, sizeof(newtio));
-	
-	switch(baudrate) {
-		case 921600:
-			newtio.c_cflag = B921600;
-			break;
-		case 576000:
-			newtio.c_cflag = B576000;
-			break;
-		case 500000:
-			newtio.c_cflag = B500000;
-			break;
-		case 460800:
-			newtio.c_cflag = B460800;
-			break;
-		case 230400:
-			newtio.c_cflag = B230400;
-			break;
-		case 115200:
-			newtio.c_cflag = B115200;
-			break;
-		case 57600:
-			newtio.c_cflag = B57600;
-			break;
-		case 38400:
-			newtio.c_cflag = B38400;
-			break;
-		case 19200:
-			newtio.c_cflag = B19200;
-			break;
-		case 9600:
-			newtio.c_cflag = B9600;
-			break;
-		case 4800:
-			newtio.c_cflag = B4800;
-			break;
-		default:
-			reprintf(ScreenOutput::ALWAYS, "unsupported baudrate!");
-			exit(0);
-	}
-	newtio.c_cflag |= CS8;
-	newtio.c_cflag |= CLOCAL;
-	newtio.c_cflag |= CREAD;
-	newtio.c_iflag = 0;
-	newtio.c_oflag = 0;
-	newtio.c_lflag = 0;
-	newtio.c_cc[VTIME] = 0;
-	#if 0
-	newtio.c_cc[VMIN] = 1; 
-	#else
-	newtio.c_cc[VMIN] = 0;
-	#endif
-
-	#if SERIAL_EN
-	tcflush(fd, TCIOFLUSH);
-	tcsetattr(fd, TCSANOW, &newtio);
+	ser->flush();
 
 	reprintf(ScreenOutput::ALWAYS, "faduino communication port is ready\n");
 	#else
@@ -115,7 +64,7 @@ bool Faduino::initSerial()	{
 
 void Faduino::closeSerial() {
 	#if SERIAL_EN
-	close(fd);
+	ser->close();
 	reprintf(ScreenOutput::ALWAYS, "closing faduino\n");
 	#else
 	reprintf(ScreenOutput::ALWAYS, "closing SERIAL DUMMY\n");
@@ -147,7 +96,7 @@ bool Faduino::sendFaduinoCmd(ValueOutput valueOutput) {
 	#endif
 
 	#if SERIAL_EN
-	write(fd, serialBufferTx, SIZE_TOTAL_OUTPUT);
+	ser->write(serialBufferTx, SIZE_TOTAL_OUTPUT);
 	#else
 	reprintf(ScreenOutput::NO, "SEND SERIAL DUMMY\n");
 	reprintf(ScreenOutput::NO, "TS(us): %d\n", *((uint32_t*)(serialBufferTx+IDX_TS)));
@@ -186,7 +135,7 @@ bool Faduino::receiveFaduinoState(bool enableParsing) {
 	memset(serialBufferRx, '\0', sizeof(serialBufferRx));
 
 	#if SERIAL_EN
-	rx_size = read(fd, serialBufferRx, BUFSIZ);
+	rx_size = ser->read(serialBufferRx, ser->available());
 	#else
 	rx_size = 0;
 	#endif

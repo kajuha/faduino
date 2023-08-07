@@ -3,6 +3,8 @@
 #include <string>
 #include <queue>
 
+#include <serial/serial.h>
+
 #include "../arduino/daemon/include/protocol_serial.h"
 
 class Faduino {
@@ -14,7 +16,7 @@ public:
 	std::queue<ValueOutput> queFaduinoCmd;
 	std::queue<ValueInput> queFaduinoState;
 
-	int fd;
+	serial::Serial *ser;
 	unsigned char serialBufferRx[BUFSIZ];
 	unsigned char serialBufferTx[BUFSIZ];
 	

@@ -4,7 +4,7 @@ TCP_PORT=20212
 USER_NAME=recipelab
 
 all: main.cpp serial.cpp reprintf.cpp
-	g++ -o faduinod main.cpp serial.cpp reprintf.cpp -lboost_thread -lboost_system -lpthread -Wall
+	g++ -o faduinod main.cpp serial.cpp reprintf.cpp -lboost_thread -lboost_system -lpthread -Wall `pkg-config --cflags --libs serial`
 
 run:
 ifndef USER_SERIAL_PORT
