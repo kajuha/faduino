@@ -130,12 +130,15 @@ bool Faduino::sendFaduinoCmd(ValueOutput valueOutput) {
 }
 
 bool Faduino::receiveFaduinoState(bool enableParsing) {
-	int rx_size;
+	static int rx_size;
 
 	memset(serialBufferRx, '\0', sizeof(serialBufferRx));
 
 	#if SERIAL_EN
-	rx_size = ser->read(serialBufferRx, ser->available());
+	rx_size = ser->available();
+	if (rx_size) {
+		rx_size = ser->read(serialBufferRx, rx_size);
+	}
 	#else
 	rx_size = 0;
 	#endif
