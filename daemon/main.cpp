@@ -469,9 +469,10 @@ int main(int argc, char* argv[]) {
 
 	faduino.sendFaduinoCmd(valueOutput);
     
-    reprintf(ScreenOutput::ALWAYS, "rosOpenCmd: %s\n", ROS_RUN);
+    reprintf(ScreenOutput::ALWAYS, "rosRunCmd: %s\n", ROS_RUN);
+    reprintf(ScreenOutput::ALWAYS, "rosRunMinimalCmd: %s\n", ROS_RUN_MINIMAL);
     reprintf(ScreenOutput::ALWAYS, "rosCheckCmd: %s\n", ROS_CHECK);
-    reprintf(ScreenOutput::ALWAYS, "rosCloseCmd: %s\n", ROS_KILL);
+    reprintf(ScreenOutput::ALWAYS, "rosKillCmd: %s\n", ROS_KILL);
 
 	#if THREAD_TCP_EN
 	isSerial = true;
@@ -758,8 +759,90 @@ int main(int argc, char* argv[]) {
 						#endif
 						break;
 					case LONG:
+						#if 1
+						reprintf(ScreenOutput::NO, "valueInput.sw_start LONG\n");
+						#endif
+						break;
+					case VERYLONG:
+						#if 1
+						valueOutput.buzzer.onTime = 200;
+						valueOutput.buzzer.offTime = 200;
+						valueOutput.buzzer.targetCount = STATE_ACT::T4;
+						valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
+						valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_power.onTime = 0;
+						valueOutput.md_power.offTime = 0;
+						valueOutput.md_power.targetCount = STATE_ACT::DIRECT;
+						valueOutput.md_power.lastState = FADUINO::RELAY::OFF;
+						valueOutput.md_power.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_estop.onTime = 0;
+						valueOutput.md_estop.offTime = 0;
+						valueOutput.md_estop.targetCount = STATE_ACT::DIRECT;
+						valueOutput.md_estop.lastState = FADUINO::RELAY::OFF;
+						valueOutput.md_estop.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_start.onTime = 0;
+						valueOutput.led_start.offTime = 0;
+						valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
+						valueOutput.led_start.lastState = FADUINO::RELAY::ON;
+						valueOutput.led_start.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.led_stop.onTime = 0;
+						valueOutput.led_stop.offTime = 0;
+						valueOutput.led_stop.targetCount = STATE_ACT::DIRECT;
+						valueOutput.led_stop.lastState = FADUINO::RELAY::OFF;
+						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
+
+						valueOutput.buzzer.update = 1;
+						valueOutput.md_power.update = 1;
+						valueOutput.md_estop.update = 1;
+						valueOutput.led_start.update = 1;
+						valueOutput.led_stop.update = 1;
+
+						faduino.sendFaduinoCmd(valueOutput);
+						valueOutputPre = valueOutput;
 						#if 0
 						reprintf(ScreenOutput::NO, "valueInput.sw_start LONG\n");
+						#endif
+
+						if (!strlen(prog.execute(ROS_CHECK).c_str())) {
+							prog.rosRunMinimal();
+							reprintf(ScreenOutput::NO, "run ROS\n");
+						} else {
+							valueOutput.buzzer.onTime = 200;
+							valueOutput.buzzer.offTime = 200;
+							valueOutput.buzzer.targetCount = STATE_ACT::TWICE;
+							valueOutput.buzzer.lastState = FADUINO::RELAY::OFF;
+							valueOutput.buzzer.order = FADUINO::ORDER::ON_FIRST;
+							valueOutput.md_power.onTime = 0;
+							valueOutput.md_power.offTime = 0;
+							valueOutput.md_power.targetCount = STATE_ACT::DIRECT;
+							valueOutput.md_power.lastState = FADUINO::RELAY::OFF;
+							valueOutput.md_power.order = FADUINO::ORDER::ON_FIRST;
+							valueOutput.md_estop.onTime = 0;
+							valueOutput.md_estop.offTime = 0;
+							valueOutput.md_estop.targetCount = STATE_ACT::DIRECT;
+							valueOutput.md_estop.lastState = FADUINO::RELAY::OFF;
+							valueOutput.md_estop.order = FADUINO::ORDER::ON_FIRST;
+							valueOutput.led_start.onTime = 0;
+							valueOutput.led_start.offTime = 0;
+							valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
+							valueOutput.led_start.lastState = FADUINO::RELAY::ON;
+							valueOutput.led_start.order = FADUINO::ORDER::ON_FIRST;
+							valueOutput.led_stop.onTime = 0;
+							valueOutput.led_stop.offTime = 0;
+							valueOutput.led_stop.targetCount = STATE_ACT::DIRECT;
+							valueOutput.led_stop.lastState = FADUINO::RELAY::OFF;
+							valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
+
+							valueOutput.buzzer.update = 1;
+							valueOutput.md_power.update = 1;
+							valueOutput.md_estop.update = 1;
+							valueOutput.led_start.update = 1;
+							valueOutput.led_stop.update = 1;
+
+							faduino.sendFaduinoCmd(valueOutput);
+							valueOutputPre = valueOutput;
+							reprintf(ScreenOutput::NO, "already run ROS\n");
+						}
 						#endif
 						break;
 					default:

@@ -6,8 +6,9 @@
 #include <string>
 #include <unistd.h>
 #include <boost/thread.hpp>
-	
+
 #define ROS_RUN "roslaunch recipelab faduinod.launch"
+#define ROS_RUN_MINIMAL "roslaunch recipelab faduinod_minimal.launch"
 #define ROS_CHECK "ps -ef|grep 'rosmaster'|grep -v 'grep'|awk '{print $2}'"
 #define ROS_KILL "kill `ps -ef|grep 'rosmaster'|grep -v 'grep'|awk '{print $2}'`"
 #define AMR_OFF "sudo shutdown -h now"
@@ -38,5 +39,9 @@ public:
 
     void rosRun() {
         threadRos = new boost::thread(execute, ROS_RUN);
+    }
+
+    void rosRunMinimal() {
+        threadRos = new boost::thread(execute, ROS_RUN_MINIMAL);
     }
 };

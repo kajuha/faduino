@@ -106,6 +106,8 @@ void loop() {
     valueInput.sw_start = STATE_INPUT::DOUBLE;
   } else if (swStart.isLongClick()) {
     valueInput.sw_start = STATE_INPUT::LONG;
+  } else if (swStart.isVeryLongClick()) {
+    valueInput.sw_start = STATE_INPUT::VERYLONG;
   } else {
     valueInput.sw_start = STATE_INPUT::RELEASED;
   }
