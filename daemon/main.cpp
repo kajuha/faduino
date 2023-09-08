@@ -580,12 +580,12 @@ int main(int argc, char* argv[]) {
 						valueOutput.md_power.offTime = 0;
 						valueOutput.md_power.targetCount = STATE_ACT::DIRECT;
 						valueOutput.md_power.lastState = FADUINO::RELAY::OFF;
-						valueOutput.md_power.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_power.order = FADUINO::ORDER::OFF_FIRST;
 						valueOutput.md_estop.onTime = 0;
 						valueOutput.md_estop.offTime = 0;
 						valueOutput.md_estop.targetCount = STATE_ACT::DIRECT;
 						valueOutput.md_estop.lastState = FADUINO::RELAY::OFF;
-						valueOutput.md_estop.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_estop.order = FADUINO::ORDER::OFF_FIRST;
 						valueOutput.led_start.onTime = 0;
 						valueOutput.led_start.offTime = 0;
 						valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
@@ -598,8 +598,8 @@ int main(int argc, char* argv[]) {
 						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
 
 						valueOutput.buzzer.update = 1;
-						valueOutput.md_power.update = 1;
-						valueOutput.md_estop.update = 1;
+						valueOutput.md_power.update = MD_MAGIC;
+						valueOutput.md_estop.update = MD_MAGIC;
 						valueOutput.led_start.update = 1;
 						valueOutput.led_stop.update = 1;
 
@@ -632,12 +632,12 @@ int main(int argc, char* argv[]) {
 						valueOutput.md_power.offTime = 0;
 						valueOutput.md_power.targetCount = STATE_ACT::DIRECT;
 						valueOutput.md_power.lastState = FADUINO::RELAY::OFF;
-						valueOutput.md_power.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_power.order = FADUINO::ORDER::OFF_FIRST;
 						valueOutput.md_estop.onTime = 0;
 						valueOutput.md_estop.offTime = 0;
 						valueOutput.md_estop.targetCount = STATE_ACT::DIRECT;
 						valueOutput.md_estop.lastState = FADUINO::RELAY::OFF;
-						valueOutput.md_estop.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_estop.order = FADUINO::ORDER::OFF_FIRST;
 						valueOutput.led_start.onTime = 0;
 						valueOutput.led_start.offTime = 0;
 						valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
@@ -650,8 +650,8 @@ int main(int argc, char* argv[]) {
 						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
 
 						valueOutput.buzzer.update = 1;
-						valueOutput.md_power.update = 1;
-						valueOutput.md_estop.update = 1;
+						valueOutput.md_power.update = MD_MAGIC;
+						valueOutput.md_estop.update = MD_MAGIC;
 						valueOutput.led_start.update = 1;
 						valueOutput.led_stop.update = 1;
 
@@ -686,12 +686,12 @@ int main(int argc, char* argv[]) {
 						valueOutput.md_power.onTime = 0;
 						valueOutput.md_power.offTime = 0;
 						valueOutput.md_power.targetCount = STATE_ACT::DIRECT;
-						valueOutput.md_power.lastState = FADUINO::RELAY::OFF;
+						valueOutput.md_power.lastState = FADUINO::RELAY::ON;
 						valueOutput.md_power.order = FADUINO::ORDER::ON_FIRST;
 						valueOutput.md_estop.onTime = 0;
 						valueOutput.md_estop.offTime = 0;
 						valueOutput.md_estop.targetCount = STATE_ACT::DIRECT;
-						valueOutput.md_estop.lastState = FADUINO::RELAY::OFF;
+						valueOutput.md_estop.lastState = FADUINO::RELAY::ON;
 						valueOutput.md_estop.order = FADUINO::ORDER::ON_FIRST;
 						valueOutput.led_start.onTime = 0;
 						valueOutput.led_start.offTime = 0;
@@ -705,8 +705,8 @@ int main(int argc, char* argv[]) {
 						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
 
 						valueOutput.buzzer.update = 1;
-						valueOutput.md_power.update = 1;
-						valueOutput.md_estop.update = 1;
+						valueOutput.md_power.update = MD_MAGIC;
+						valueOutput.md_estop.update = MD_MAGIC;
 						valueOutput.led_start.update = 1;
 						valueOutput.led_stop.update = 1;
 
@@ -747,8 +747,8 @@ int main(int argc, char* argv[]) {
 							valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
 
 							valueOutput.buzzer.update = 1;
-							valueOutput.md_power.update = 1;
-							valueOutput.md_estop.update = 1;
+							valueOutput.md_power.update = 0;
+							valueOutput.md_estop.update = 0;
 							valueOutput.led_start.update = 1;
 							valueOutput.led_stop.update = 1;
 
@@ -773,12 +773,12 @@ int main(int argc, char* argv[]) {
 						valueOutput.md_power.onTime = 0;
 						valueOutput.md_power.offTime = 0;
 						valueOutput.md_power.targetCount = STATE_ACT::DIRECT;
-						valueOutput.md_power.lastState = FADUINO::RELAY::OFF;
+						valueOutput.md_power.lastState = FADUINO::RELAY::ON;
 						valueOutput.md_power.order = FADUINO::ORDER::ON_FIRST;
 						valueOutput.md_estop.onTime = 0;
 						valueOutput.md_estop.offTime = 0;
 						valueOutput.md_estop.targetCount = STATE_ACT::DIRECT;
-						valueOutput.md_estop.lastState = FADUINO::RELAY::OFF;
+						valueOutput.md_estop.lastState = FADUINO::RELAY::ON;
 						valueOutput.md_estop.order = FADUINO::ORDER::ON_FIRST;
 						valueOutput.led_start.onTime = 0;
 						valueOutput.led_start.offTime = 0;
@@ -792,8 +792,8 @@ int main(int argc, char* argv[]) {
 						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
 
 						valueOutput.buzzer.update = 1;
-						valueOutput.md_power.update = 1;
-						valueOutput.md_estop.update = 1;
+						valueOutput.md_power.update = MD_MAGIC;
+						valueOutput.md_estop.update = MD_MAGIC;
 						valueOutput.led_start.update = 1;
 						valueOutput.led_stop.update = 1;
 
@@ -834,8 +834,8 @@ int main(int argc, char* argv[]) {
 							valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
 
 							valueOutput.buzzer.update = 1;
-							valueOutput.md_power.update = 1;
-							valueOutput.md_estop.update = 1;
+							valueOutput.md_power.update = 0;
+							valueOutput.md_estop.update = 0;
 							valueOutput.led_start.update = 1;
 							valueOutput.led_stop.update = 1;
 
@@ -865,12 +865,12 @@ int main(int argc, char* argv[]) {
 						valueOutput.md_power.offTime = 0;
 						valueOutput.md_power.targetCount = STATE_ACT::DIRECT;
 						valueOutput.md_power.lastState = FADUINO::RELAY::OFF;
-						valueOutput.md_power.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_power.order = FADUINO::ORDER::OFF_FIRST;
 						valueOutput.md_estop.onTime = 0;
 						valueOutput.md_estop.offTime = 0;
 						valueOutput.md_estop.targetCount = STATE_ACT::DIRECT;
 						valueOutput.md_estop.lastState = FADUINO::RELAY::OFF;
-						valueOutput.md_estop.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_estop.order = FADUINO::ORDER::OFF_FIRST;
 						valueOutput.led_start.onTime = 0;
 						valueOutput.led_start.offTime = 0;
 						valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
@@ -883,8 +883,8 @@ int main(int argc, char* argv[]) {
 						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
 
 						valueOutput.buzzer.update = 1;
-						valueOutput.md_power.update = 1;
-						valueOutput.md_estop.update = 1;
+						valueOutput.md_power.update = MD_MAGIC;
+						valueOutput.md_estop.update = MD_MAGIC;
 						valueOutput.led_start.update = 1;
 						valueOutput.led_stop.update = 1;
 						faduino.sendFaduinoCmd(valueOutput);
@@ -929,12 +929,12 @@ int main(int argc, char* argv[]) {
 						valueOutput.md_power.offTime = 0;
 						valueOutput.md_power.targetCount = STATE_ACT::DIRECT;
 						valueOutput.md_power.lastState = FADUINO::RELAY::OFF;
-						valueOutput.md_power.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_power.order = FADUINO::ORDER::OFF_FIRST;
 						valueOutput.md_estop.onTime = 0;
 						valueOutput.md_estop.offTime = 0;
 						valueOutput.md_estop.targetCount = STATE_ACT::DIRECT;
 						valueOutput.md_estop.lastState = FADUINO::RELAY::OFF;
-						valueOutput.md_estop.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_estop.order = FADUINO::ORDER::OFF_FIRST;
 						valueOutput.led_start.onTime = 0;
 						valueOutput.led_start.offTime = 0;
 						valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
@@ -947,8 +947,8 @@ int main(int argc, char* argv[]) {
 						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
 
 						valueOutput.buzzer.update = 1;
-						valueOutput.md_power.update = 1;
-						valueOutput.md_estop.update = 1;
+						valueOutput.md_power.update = MD_MAGIC;
+						valueOutput.md_estop.update = MD_MAGIC;
 						valueOutput.led_start.update = 1;
 						valueOutput.led_stop.update = 1;
 
@@ -981,12 +981,12 @@ int main(int argc, char* argv[]) {
 						valueOutput.md_power.offTime = 0;
 						valueOutput.md_power.targetCount = STATE_ACT::DIRECT;
 						valueOutput.md_power.lastState = FADUINO::RELAY::OFF;
-						valueOutput.md_power.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_power.order = FADUINO::ORDER::OFF_FIRST;
 						valueOutput.md_estop.onTime = 0;
 						valueOutput.md_estop.offTime = 0;
 						valueOutput.md_estop.targetCount = STATE_ACT::DIRECT;
 						valueOutput.md_estop.lastState = FADUINO::RELAY::OFF;
-						valueOutput.md_estop.order = FADUINO::ORDER::ON_FIRST;
+						valueOutput.md_estop.order = FADUINO::ORDER::OFF_FIRST;
 						valueOutput.led_start.onTime = 0;
 						valueOutput.led_start.offTime = 0;
 						valueOutput.led_start.targetCount = STATE_ACT::DIRECT;
@@ -999,8 +999,8 @@ int main(int argc, char* argv[]) {
 						valueOutput.led_stop.order = FADUINO::ORDER::ON_FIRST;
 
 						valueOutput.buzzer.update = 1;
-						valueOutput.md_power.update = 1;
-						valueOutput.md_estop.update = 1;
+						valueOutput.md_power.update = MD_MAGIC;
+						valueOutput.md_estop.update = MD_MAGIC;
 						valueOutput.led_start.update = 1;
 						valueOutput.led_stop.update = 1;
 
