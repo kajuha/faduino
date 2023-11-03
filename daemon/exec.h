@@ -8,7 +8,7 @@
 #include <boost/thread.hpp>
 
 #define ROS_RUN "roslaunch recipelab faduinod.launch"
-#define ROS_RUN_MINIMAL "roslaunch recipelab faduinod_minimal.launch"
+#define ROS_RUN_MINIMAL "export ROS_HOSTNAME=192.168.10.10; export ROS_MASTER_URI=http://192.168.10.10:11311; roslaunch recipelab faduinod_minimal.launch"
 #define ROS_CHECK "ps -ef|grep 'rosmaster'|grep -v 'grep'|awk '{print $2}'"
 #define ROS_KILL "kill `ps -ef|grep 'rosmaster'|grep -v 'grep'|awk '{print $2}'`"
 #define AMR_OFF "sudo shutdown -h now"
