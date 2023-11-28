@@ -6,14 +6,30 @@ std::string id;
 
 bool panelOutCallback(faduino::PanelOut::Request &req, faduino::PanelOut::Response &res) {
     ROS_INFO("[%s] %s", id.c_str(), __FUNCTION__);
-    req.buzzer;
-    req.md_power;
-    req.md_estop;
-    req.led_start;
-    req.led_stop;
-    req.bat_relay;
-    req.out_spare1;
-    req.out_spare2;
+    if (req.buzzer.update) {
+        printf("buzzer updated.\n");
+    }
+    if (req.md_power.update) {
+        printf("md_power updated.\n");
+    }
+    if (req.md_estop.update) {
+        printf("md_estop updated.\n");
+    }
+    if (req.led_start.update) {
+        printf("led_start updated.\n");
+    }
+    if (req.led_stop.update) {
+        printf("led_stop updated.\n");
+    }
+    if (req.bat_relay.update) {
+        printf("bat_relay updated.\n");
+    }
+    if (req.out_spare1.update) {
+        printf("out_spare1 updated.\n");
+    }
+    if (req.out_spare2.update) {
+        printf("out_spare2 updated.\n");
+    }
     
 #define SRV_SUCCESS	true
     res.success = SRV_SUCCESS;
