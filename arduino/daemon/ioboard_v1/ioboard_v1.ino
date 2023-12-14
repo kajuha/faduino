@@ -152,6 +152,10 @@ void loop() {
       case STATE_ESTOP::ACTION:
         valueInput.estop_fr = STATE_INPUT::PUSHED;
         stateEstopFR = 1;
+        mdPower.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::OFF_FIRST);
+        mdPower.update();
+        mdEstop.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::OFF_FIRST);
+        mdEstop.update();
         break;
       case STATE_ESTOP::IDLE:
         break;
@@ -169,6 +173,10 @@ void loop() {
       case STATE_ESTOP::ACTION:
         valueInput.estop_bl = STATE_INPUT::PUSHED;
         stateEstopBL = 1;
+        mdPower.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::OFF_FIRST);
+        mdPower.update();
+        mdEstop.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::OFF_FIRST);
+        mdEstop.update();
         break;
       case STATE_ESTOP::IDLE:
         break;
@@ -186,6 +194,10 @@ void loop() {
       case STATE_ESTOP::ACTION:
         valueInput.in_spare1 = STATE_INPUT::PUSHED;
         stateInSpare1 = 1;
+        mdPower.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::OFF_FIRST);
+        mdPower.update();
+        mdEstop.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::OFF_FIRST);
+        mdEstop.update();
         break;
       case STATE_ESTOP::IDLE:
         break;
@@ -203,6 +215,10 @@ void loop() {
       case STATE_ESTOP::ACTION:
         valueInput.in_spare2 = STATE_INPUT::PUSHED;
         stateInSpare2 = 1;
+        mdPower.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::OFF_FIRST);
+        mdPower.update();
+        mdEstop.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::OFF_FIRST);
+        mdEstop.update();
         break;
       case STATE_ESTOP::IDLE:
         break;
