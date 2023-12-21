@@ -29,12 +29,6 @@
 ValueInput valueInput, valueInputBefore;
 ValueOutput valueOutput, valueOutputBefore;
 
-// 시간관련 변수
-// 상위제어기 부팅시작 시간
-unsigned long ts_bootup_start;
-// 현재 시간
-unsigned long ts_now;
-
 // 입력핀 변수(클래스)(더블클릭 및 롱클릭 등 감지)
 PinButton swStart(PIN_INPUT_SW_START, INPUT);
 PinButton swStop(PIN_INPUT_SW_STOP, INPUT);
@@ -79,7 +73,8 @@ void setup() {
   us_now = us_pre = millis();
   
   // 출력핀 설정
-  swPc.setOnOffTime(BOOT_SW_MSEC, 1000, STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
+  swPc.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::ON, FADUINO::ORDER::ON_FIRST);
+  swPc.update();
   buzzer.setOnOffTime(200, 200, STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
   mdPower.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
   mdEstop.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
@@ -89,14 +84,9 @@ void setup() {
   batRelay.update();
   outSpare1.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
   outSpare2.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-  ts_now = millis();
-  ts_bootup_start = ts_now;
 }
 
 void loop() {
-  // 현재 시간 검사
-  ts_now = millis();
-
   // 입력핀 상태(더블클릭, 롱클릭 등) 처리
   swStart.update();
   swStop.update();
@@ -138,6 +128,7 @@ void loop() {
     outSpare1.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
     outSpare2.setOnOffTime(0, 0, STATE_ACT::DIRECT, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
 
+    swPc.setOnOffTime((buzzerTime.onTime+buzzerTime.offTime)*(buzzerTime.targetCount+1), (buzzerTime.onTime+buzzerTime.offTime), STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
     batRelay.setOnOffTime((buzzerTime.onTime+buzzerTime.offTime)*(buzzerTime.targetCount+1), (buzzerTime.onTime+buzzerTime.offTime), STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
   } else {
     valueInput.sw_stop = STATE_INPUT::RELEASED;
@@ -224,25 +215,6 @@ void loop() {
         break;
       default:
         break;
-    }
-  }
-
-  // 입력핀에 대한 처리
-  if (valueInput.sw_start == STATE_INPUT::LONG) {
-    // 부팅된 상태인가?
-    if (false) {
-      // 아무것도 하지 않음
-      // 이미 부팅된 상태를 알려줄 것
-    }
-    // 부팅시간을 초과하지 않았는가?
-    else if ((ts_now - ts_bootup_start) > BOOTUP_MSEC_PC) {
-      // 아무것도 하지 않음
-      // 부팅시간이 초과되지 않음을 알려줄 것
-    }
-    // 부팅된 상태도 아니고 부팅
-    else {
-      swPc.setOnOffTime(BOOT_SW_MSEC, 1000, STATE_ACT::ONCE, FADUINO::RELAY::OFF, FADUINO::ORDER::ON_FIRST);
-      ts_bootup_start = ts_now;
     }
   }
 
@@ -471,7 +443,10 @@ void checksumData(unsigned char* packet)
         if (valueOutput.md_estop.update == MD_MAGIC) mdEstop.setOnOffTime(valueOutput.md_estop.onTime, valueOutput.md_estop.offTime, valueOutput.md_estop.targetCount, valueOutput.md_estop.lastState, valueOutput.md_estop.order);
         if (valueOutput.led_start.update) ledStart.setOnOffTime(valueOutput.led_start.onTime, valueOutput.led_start.offTime, valueOutput.led_start.targetCount, valueOutput.led_start.lastState, valueOutput.led_start.order);
         if (valueOutput.led_stop.update) ledStop.setOnOffTime(valueOutput.led_stop.onTime, valueOutput.led_stop.offTime, valueOutput.led_stop.targetCount, valueOutput.led_stop.lastState, valueOutput.led_stop.order);
-        if (valueOutput.bat_relay.update == RELAY_MAGIC) batRelay.setOnOffTime(valueOutput.bat_relay.onTime, valueOutput.bat_relay.offTime, valueOutput.bat_relay.targetCount, valueOutput.bat_relay.lastState, valueOutput.bat_relay.order);
+        if (valueOutput.bat_relay.update == RELAY_MAGIC) {
+          batRelay.setOnOffTime(valueOutput.bat_relay.onTime, valueOutput.bat_relay.offTime, valueOutput.bat_relay.targetCount, valueOutput.bat_relay.lastState, valueOutput.bat_relay.order);
+          swPc.setOnOffTime(valueOutput.bat_relay.onTime, valueOutput.bat_relay.offTime, valueOutput.bat_relay.targetCount, valueOutput.bat_relay.lastState, valueOutput.bat_relay.order);
+        }
         if (valueOutput.out_spare1.update) outSpare1.setOnOffTime(valueOutput.out_spare1.onTime, valueOutput.out_spare1.offTime, valueOutput.out_spare1.targetCount, valueOutput.out_spare1.lastState, valueOutput.out_spare1.order);
         if (valueOutput.out_spare2.update) outSpare2.setOnOffTime(valueOutput.out_spare2.onTime, valueOutput.out_spare2.offTime, valueOutput.out_spare2.targetCount, valueOutput.out_spare2.lastState, valueOutput.out_spare2.order);
         break;
